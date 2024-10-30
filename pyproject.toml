@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "looper"
+version="0.0.1"
+description = "Static analysis tool for determining tight upper bounds on execution cost"
+keywords = ["static analysis", "COST", "Looper", "execution cost"]
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Jan Pánek", email = "panekjan.j@seznam.cz" }
+]
+maintainers = [
+    {name = "Jan Pánek", email = "panekjan.j@seznam.cz" }
+]
+# requirements
+requires-python = ">=3.10"
+dependencies = [
+    "z3-solver",
+    "click"
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["looper", "bindings"]
+
+[project.scripts]
+looper = "looper:cli_run_analysis"
