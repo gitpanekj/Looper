@@ -1,10 +1,10 @@
 .PHONY: build_modules, clean_modules, test, install
 
 build_modules:
-	cd src/build && make
+	cd looper/build && make
 
 clean_modules:
-	cd src/build && make clean
+	cd looper/build && make clean
 
 test:
 	looper --file tests/del.c
