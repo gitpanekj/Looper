@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "lts_constructor/lts_constructor.hpp"
+#include "graphs/labeled_transition_system.hpp"
 
 #include "llvm/ADT/StringRef.h"
 
@@ -170,11 +171,11 @@ LLVM_Module::~LLVM_Module(){
 
 const std::vector<std::string> LLVM_Module::get_functions() { return functions; }
 
-std::string LLVM_Module::get_lts(const std::string& name){
+graphs::LabeledTransitionSystem<std::string, std::string> LLVM_Module::get_lts(const std::string& name){
   StringRef funcname(name);
   Function *F = M->getFunction(name);
 
   // TODO: place for building LTS
 
-  return "LTS for function " + F->getName().str();
+  return graphs::LabeledTransitionSystem<std::string, std::string>();
 }

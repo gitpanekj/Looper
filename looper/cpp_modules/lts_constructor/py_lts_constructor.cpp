@@ -7,7 +7,8 @@ namespace py = pybind11;
 PYBIND11_MODULE(lts, m)
 {
     m.doc() = "lts_constructor";
-    
+    py::module_::import("bindings.graphs");
+
     py::class_<LLVM_Module>(m, "LLVM_Module")
         .def(py::init<>())
         .def("load_module", &LLVM_Module::load_module)

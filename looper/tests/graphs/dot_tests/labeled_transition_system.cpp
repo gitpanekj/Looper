@@ -3,7 +3,7 @@
 #include <fstream>
 
 #define TEST_RECORD(fname) {#fname, fname}
-#define TEST_OUTPUT_PATH "/home/panekj/programming/Looper/tests/"
+
 
 using namespace graphs;
 

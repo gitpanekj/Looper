@@ -28,7 +28,7 @@ def run_analysis(filename: Path) -> int:
     funcs = m.get_functions()
     for f in funcs:
         l = m.get_lts(f)
-        print(l)
+        print(l.convert_to_dot())
     
     
  
