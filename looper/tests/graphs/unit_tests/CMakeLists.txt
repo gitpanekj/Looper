@@ -10,7 +10,7 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(
-    DirectedLabeledGraphTests directed_labeled_graph.cpp 
+    DirectedLabeledGraphTests directed_labeled_graph.cpp labeled_transition_system.cpp
 )
 
 target_link_libraries(

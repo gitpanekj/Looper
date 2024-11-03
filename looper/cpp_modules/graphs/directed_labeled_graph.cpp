@@ -143,7 +143,7 @@ namespace graphs
     int DirectedLabeledGraph<NodeDataType, EdgeDataType>::add_edge(int src, int dst, EdgeDataType label)
     {
         int edge_id = edge_id_counter++;
-        id_to_edge_mapping[edge_id] = std::tuple(src, dst);
+        id_to_edge_mapping[edge_id] = std::tuple<int, int>(src, dst);
         outgoing_edges[src].emplace_back(dst, edge_id);
         ingoing_edges[dst].emplace_back(src, edge_id);
         edges[edge_id] = label;
@@ -154,7 +154,7 @@ namespace graphs
     int DirectedLabeledGraph<NodeDataType, EdgeDataType>::add_edge(int src, int dst)
     {
         int edge_id = edge_id_counter++;
-        id_to_edge_mapping[edge_id] = std::tuple(src, dst);
+        id_to_edge_mapping[edge_id] = std::tuple<int, int>(src, dst);
         outgoing_edges[src].emplace_back(dst, edge_id);
         ingoing_edges[dst].emplace_back(src, edge_id);
         return edge_id;

@@ -1,2 +1,2 @@
-add_executable(GraphTest directed_labeled_graph.cpp)
+add_executable(GraphTest runner.cpp)
 target_link_libraries(GraphTest PRIVATE graphs)
