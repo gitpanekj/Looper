@@ -18,8 +18,11 @@ def cli_run_analysis(file: Path) -> None:
 def run_analysis(filename: Path) -> int:
     # parse c source to LLVM IR
     os.system(f"{CLANG} {CLANG_ARGS} -emit-llvm -c {filename} -o llvm_ir.bc")
+    os.system(f"{CLANG} {CLANG_ARGS} -S -emit-llvm -c {filename} -o llvm_ir.ll")
+    os.system("opt -S -passes='dot-cfg' llvm_ir.ll -disable-output")
+	
     
-    m = lts.LLVM_Module()
+    m = lts.LTSConstructor()
 
     rv = m.load_module("llvm_ir.bc")
     if (rv == -1):
@@ -27,11 +30,15 @@ def run_analysis(filename: Path) -> int:
     
     funcs = m.get_functions()
     for f in funcs:
-        l = m.get_lts(f)
-        print(l.convert_to_dot())
+        try:
+            l = m.get_lts(f)
+        except:
+            print("Error")
+        
+        with open(f"{f}.dot", "w") as f:
+            dot = l.convert_to_dot()
+            f.write(dot)
     
-    
- 
     return 0
     
     

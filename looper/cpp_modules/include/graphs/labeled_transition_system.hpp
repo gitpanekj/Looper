@@ -2,6 +2,7 @@
 #define LTS_H
 
 #include "graphs/directed_labeled_graph.hpp"
+#include <vector>
 
 namespace graphs {
 
@@ -13,10 +14,18 @@ namespace graphs {
     private:
         int start_location;
         int end_location;
+        std::vector<std::pair<std::string, std::string>> parameters;
+        int n_params = 0;
+        std::string fname;
+        std::string ret;
         // TODO: required attributes
         // set of norms - update on each add_transition
         
     public:
+      void add_parameter(std::string name, std::string type);
+      void add_parameters(std::vector<std::pair<std::string, std::string>>);
+      void add_ret(std::string name);
+      void add_name(std::string name);
 
       int add_start_location();
       int add_start_location(NodeDataType data);
@@ -32,6 +41,8 @@ namespace graphs {
 
       
       // Getters - ?
+      int startLocation() const {return start_location;}
+      int endLocation() const {return end_location;}
 
       std::string convert_to_dot() override; // override
    };

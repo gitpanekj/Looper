@@ -37,7 +37,7 @@ namespace graphs
    // TODO: traits for NodeDataType and EdgeDataType to be convertible to string for convert_to_dot function
    class DirectedLabeledGraph
    {
-   private:
+   protected:
       ///> OutgoingEdge structure
       struct OutgoingEdge
       {

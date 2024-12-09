@@ -5,4 +5,5 @@ __pycache__
 *.so
 *.dot
 *.bc
+*.ll
 looper.egg-info

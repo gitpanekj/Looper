@@ -2,23 +2,48 @@
 #define LTS_CONSTRUCTOR_H
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <stack>
+#include <tuple>
+#include <set>
+
 #include "llvm/IR/Module.h"
 #include "llvm/IR/LLVMContext.h"
-#include "graphs/labeled_transition_system.hpp"
+#include "llvm/IR/BasicBlock.h"
 
-class LLVM_Module
+#include "graphs/labeled_transition_system.hpp"
+#include "lts_constructor/cfg_utils.hpp"
+
+
+using LTS = graphs::LabeledTransitionSystem<std::string, std::string>;
+
+class LTSConstructor
 {
 private:
-    std::unique_ptr<llvm::Module> M = nullptr;
-    std::vector<std::string> functions;
-    llvm::LLVMContext Context;
+    std::unique_ptr<llvm::Module> module_handle = nullptr; // loaded module
+    llvm::LLVMContext module_context;                 // module context
+    std::vector<std::string> module_functions;        // module functions 
+
+
+    // LTS construction
+    LTS* lts;
+    llvm::BasicBlock *block_to_process;
+    int previous_block_id;
+    std::set<llvm::BasicBlock *> visited_blocks;
+    std::unordered_map<llvm::BasicBlock *, int> basic_block_id;
+    std::stack<std::pair<int, llvm::BasicBlock *>> dfs_stack;
+    
+    // construction utilities
+    void bindLTS(LTS *_lts){lts = _lts;};
+    void processFunctionSignature(llvm::Function* function_handle);
+    BasicBlockType processBasicBlock();
+    
 
 public:
-    int load_module(const std::string &_functions);
-    const std::vector<std::string> get_functions();
-    graphs::LabeledTransitionSystem<std::string, std::string> get_lts(const std::string &name);
-
-    ~LLVM_Module();
+    void loadModule(const std::string &_functions);
+    const std::vector<std::string> getFunctions() { return module_functions; };
+    LTS getLTS(const std::string &name);
+    ~LTSConstructor(){module_handle.release();}
 };
 
 #endif

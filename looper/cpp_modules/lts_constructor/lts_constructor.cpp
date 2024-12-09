@@ -1,181 +1,182 @@
-#include <string>
-#include <memory>
-#include <iostream>
-#include <unordered_map>
+/**
+ * @file lts_constructor.cpp
+ * @author Jan Pánek (xpanek11@stud.fit.vutbr.cz)
+ * @brief
+ * @version 0.1
+ * @date 2024-12-07
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
 
 #include "lts_constructor/lts_constructor.hpp"
 #include "graphs/labeled_transition_system.hpp"
+#include "lts_constructor/cfg_utils.hpp"
+#include "lts_constructor/exceptions.hpp"
 
-#include "llvm/ADT/StringRef.h"
-
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Support/raw_os_ostream.h"
 #include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/IRReader/IRReader.h"
-
+#include "llvm/IR/CFG.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Module.h"
-#include "llvm/IR/PassManager.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Instructions.h"
 
-
-#include "llvm/Pass.h"
-#include "llvm/Passes/PassBuilder.h"
-#include "llvm/Passes/PassPlugin.h"
-
-#include "llvm/Transforms/InstCombine/InstCombine.h"
-#include "llvm/Transforms/Utils/Mem2Reg.h"
-#include "llvm/Transforms/Scalar/DeadStoreElimination.h"
-
-#include "llvm/Analysis/CFGPrinter.h"
+#include <iostream>
+#include <memory>
+#include <unordered_map>
+#include <set>
+#include <stack>
+#include <exception>
 
 using namespace llvm;
 
-namespace {
-
-  struct MyAnalysisResult {
-    int result;
-  };
-
-  // Define the analysis itself
-  struct MyAnalysis : AnalysisInfoMixin<MyAnalysis> {
-      using Result = MyAnalysisResult;
-      static llvm::AnalysisKey Key;
-      Result run(Function &F, FunctionAnalysisManager &AM) {
-          // Perform analysis on function F
-          Result res;
-          res.result = 10;
-          return res;
-      }
-  };
-
-  llvm::AnalysisKey MyAnalysis::Key;
-
-
-
-  struct LTSConstructWrapper : public PassInfoMixin<LTSConstructWrapper> {
-    // Run the pass on the Module and return whether it modified the Module.
-    PreservedAnalyses run(Function &F, FunctionAnalysisManager &FAM) {
-      llvm::errs() << "===Running functionPrinter on function " << F.getName() << "===\n";
-      // CFG traversal and LTS construction
-      
-      for ( BasicBlock& BB : F)
-      {
-        llvm::errs() << BB.getName().str() << "\n";
-      }
-      llvm::errs() << "======================================\n";
-
-      
-      auto &Result = FAM.getResult<MyAnalysis>(F);
-
-
-      // Indicate that this pass did not modify the Module.
-      return PreservedAnalyses::all();
-    }
-  };
-}
-
-// Register the pass with the New Pass Manager
-PassPluginLibraryInfo getMyPassPluginInfo() {
-  return {LLVM_PLUGIN_API_VERSION, "MyPass", LLVM_VERSION_STRING,
-          [](PassBuilder &PB) {
-            // Register the Module Pass with the PassBuilder
-            PB.registerPipelineParsingCallback(
-              [](StringRef Name, FunctionPassManager &FPM, ArrayRef<PassBuilder::PipelineElement>) {
-                if (Name == "function_printer") {
-                  FPM.addPass(LTSConstructWrapper());
-                  return true;
-                }
-                return false;
-              }
-            );
-          }};
-}
-
-// Export the pass for dynamic loading
-extern "C" LLVM_ATTRIBUTE_WEAK ::llvm::PassPluginLibraryInfo llvmGetPassPluginInfo() {
-  return getMyPassPluginInfo();
-}
-
-static MyAnalysisResult createLTS(Function &F)
+/**
+ * @brief Parse .bc file and load it to llvm module.
+ *
+ * @param _filename .bc file with llvm IR
+ * @return int 0 on success, otherwise 1
+ */
+void LTSConstructor::loadModule(const std::string &_filename)
 {
-  LoopAnalysisManager LAM;
-  FunctionAnalysisManager FAM;
-  CGSCCAnalysisManager CGAM;
-  ModuleAnalysisManager MAM;
+  // Empty file with llvm IR
+  if (_filename.empty())
+  {
+    throw InvalidFileException("Provided file does not contains LLVM IR bitcode.");
+  }
 
-  // register analysis
-  FAM.registerPass([&] { return MyAnalysis(); });
+  // Try to parse IR file
+  StringRef filename(_filename);
+  SMDiagnostic err;
+  auto temp = parseIRFile(filename, err, module_context);
 
-  PassBuilder PB;
-  PB.registerModuleAnalyses(MAM);
-  PB.registerCGSCCAnalyses(CGAM);
-  PB.registerFunctionAnalyses(FAM);
-  PB.registerLoopAnalyses(LAM);
-  PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
+  // failed to parse file with IR
+  if (temp == nullptr)
+  {
+    throw InvalidFileException("Failed to parse provided LLVM IR bitcode.");
+  }
 
+  // Move LLVM IR in memmory representation handle to LTSConstructor module handle
+  module_handle = std::move(temp);
 
-  ModulePassManager MPM;
-  FunctionPassManager FPM;
-
-  FPM.addPass(DSEPass());         // dse
-  FPM.addPass(InstCombinePass()); // instcombine
-  FPM.addPass(PromotePass());     // mem2reg
-  FPM.addPass(CFGPrinterPass());
-  FPM.addPass(LTSConstructWrapper());
-    
-    
-  //MPM.addPass(createModuleToFunctionPassAdaptor(std::move(FPM)));
-  FPM.run(F, FAM);
-
-  auto &Result = FAM.getResult<MyAnalysis>(F);
-  return Result;
+  for (Function &F : *module_handle)
+  {
+    module_functions.push_back(F.getName().str());
+  }
 }
 
-
-
-int LLVM_Module::load_module(const std::string& _filename)
+/**
+ * @brief Construct LTS for a function in loaded module with given name.
+ *
+ * Module must be loaded first.
+ *
+ * @param name
+ * @return LTS
+ */
+LTS LTSConstructor::getLTS(const std::string &name)
 {
-    if (_filename.empty()) {
-        std::cerr << "Filename is empty.\n";
-        return -1; // Return an error code if the filename is empty
-    }
+  // Check that module is loaded
+  if (module_handle == nullptr)
+  {
+    throw ModuleNotLoadedException("Trying to get LTS without loaded module.");
+  }
 
-    StringRef filename (_filename);
-    SMDiagnostic Err;
-
-    auto tempM = parseIRFile(filename, Err, Context);
-
-    if (tempM == nullptr)
-    {
-        std::cerr << "Error\n";
-        std::cerr << Err.getMessage().str() << std::endl;
-        return -1;
-    }
-
-    M = std::move(tempM);
-
-    functions.clear();
-    for ( Function& F : *M )
-    {
-        functions.push_back(F.getName().str());
-    }
-
-    return 0;
-}
-
-LLVM_Module::~LLVM_Module(){
-  std::cout << "Destroying LLVM_Module instance." << std::endl;
-  M.release();
-}
-
-const std::vector<std::string> LLVM_Module::get_functions() { return functions; }
-
-graphs::LabeledTransitionSystem<std::string, std::string> LLVM_Module::get_lts(const std::string& name){
+  // Try to get function CFG from module
   StringRef funcname(name);
-  Function *F = M->getFunction(name);
+  Function *function_handle = module_handle->getFunction(name);
+  if (!function_handle)
+  {
+    throw InvalidFunctionNameException("Provided function name is not present in the loaded module.");
+  }
 
-  // TODO: place for building LTS
+  /*** LTS construction  ***/
+  LTS _lts;
+  bindLTS(&_lts);
+  lts->add_start_location("start location"); // start location l_s
+  lts->add_end_location("exit location");    // exit location l_e
+  processFunctionSignature(function_handle); // function signature
 
-  return graphs::LabeledTransitionSystem<std::string, std::string>();
+  // NOTE: as a result of performed LLVM passes a function may be left without any basic blocks
+  // in that case, empty LTS is returned
+  if (function_handle->empty())
+  {
+    lts->add_edge(lts->add_start_location(), lts->add_end_location());
+    return _lts;
+  }
+
+  // Traverse CFG
+  dfs_stack.push({lts->startLocation(), &function_handle->getEntryBlock()});
+  while (!dfs_stack.empty())
+  {
+
+    std::pair<int, llvm::BasicBlock *> from_to = dfs_stack.top();
+    dfs_stack.pop();
+    previous_block_id = std::get<0>(from_to);
+    block_to_process = std::get<1>(from_to);
+
+    BasicBlockType basic_block_type = processBasicBlock();
+
+    bool basic_block_is_visited = isVisited(visited_blocks, block_to_process);
+
+    // update visited block and push nodes to process into the stack
+    if (!basic_block_is_visited)
+    {
+      visited_blocks.insert(block_to_process);
+      int from = basic_block_type.is(BasicBlockType::Property::Intermediary) ? previous_block_id : basic_block_id[block_to_process]; // intermediary nodes are skipped
+      for (int i = 0; i < block_to_process->getTerminator()->getNumSuccessors(); i++)
+      {
+        dfs_stack.push({from, block_to_process->getTerminator()->getSuccessor(i)});
+      }
+    }
+  }
+
+  return _lts;
+}
+
+/// Private methods
+void LTSConstructor::processFunctionSignature(llvm::Function *function_handle)
+{
+  lts->add_name(getFunctionName(function_handle));
+  lts->add_ret(getFunctionReturnType(function_handle));
+  lts->add_parameters(getFunctionParameters(function_handle));
+}
+
+BasicBlockType LTSConstructor::processBasicBlock()
+{
+  std::cout << "Processing: " << std::string(block_to_process->getName()) << std::endl;
+  BasicBlockType basic_block_type = getBasicBlockType(block_to_process);
+  bool basic_block_is_visited = isVisited(visited_blocks, block_to_process);
+
+  std::cout << basic_block_type << std::endl;
+  std::cout << "  Visited: " << basic_block_is_visited << std::endl;
+
+  // LTS structure
+  if (basic_block_is_visited)
+  {
+    int src = previous_block_id;                // retrive LTS node ID of previous basic block
+    int dst = basic_block_id[block_to_process]; // retrive LTS node ID of visited basic block
+    lts->add_edge(src, dst);                    // add edge between the two visited LTS locations
+  }
+  else
+  {
+    // produce LTS location only for branching, join and terminating basic blocks
+    // for intermediary nodes, only instructions are processed
+    if (!basic_block_type.is(BasicBlockType::Property::Intermediary))
+    {
+      int src = previous_block_id;                                           // retrive LTS node ID of previous basic block
+      int dst = lts->add_location(std::string(block_to_process->getName())); // create new location in LTS
+      basic_block_id[block_to_process] = dst;                                // assign current basic block ID of create LTS location
+      lts->add_edge(src, dst);                                               // add edge from previous LTS location to the new one
+    }
+
+    // add edge to LTS exit location for terminating basic block
+    if (basic_block_type.is(BasicBlockType::Property::Terminating))
+    {
+      lts->add_edge(basic_block_id[block_to_process], lts->endLocation());
+    }
+  }
+
+  // TODO: Process Instructions
+
+  return basic_block_type;
 }

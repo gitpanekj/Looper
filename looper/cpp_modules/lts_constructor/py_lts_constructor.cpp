@@ -8,10 +8,11 @@ PYBIND11_MODULE(lts, m)
 {
     m.doc() = "lts_constructor";
     py::module_::import("bindings.graphs");
+    py::module_::import("bindings.expression");
 
-    py::class_<LLVM_Module>(m, "LLVM_Module")
+    py::class_<LTSConstructor>(m, "LTSConstructor")
         .def(py::init<>())
-        .def("load_module", &LLVM_Module::load_module)
-        .def("get_lts", &LLVM_Module::get_lts)
-        .def("get_functions", &LLVM_Module::get_functions);
+        .def("load_module", &LTSConstructor::loadModule)
+        .def("get_lts", &LTSConstructor::getLTS)
+        .def("get_functions", &LTSConstructor::getFunctions);
 }
