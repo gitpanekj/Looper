@@ -20,7 +20,12 @@
 #include "llvm/IR/CFG.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Module.h"
+
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Value.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Constants.h"
 
 #include <iostream>
 #include <memory>
@@ -75,6 +80,8 @@ void LTSConstructor::loadModule(const std::string &_filename)
  */
 LTS LTSConstructor::getLTS(const std::string &name)
 {
+
+  std::cout << "Function: " + name << std::endl;
   // Check that module is loaded
   if (module_handle == nullptr)
   {
@@ -90,6 +97,7 @@ LTS LTSConstructor::getLTS(const std::string &name)
   }
 
   /*** LTS construction  ***/
+  interpret.clearInterpret();
   LTS _lts;
   bindLTS(&_lts);
   lts->add_start_location("start location"); // start location l_s
@@ -114,6 +122,7 @@ LTS LTSConstructor::getLTS(const std::string &name)
     previous_block_id = std::get<0>(from_to);
     block_to_process = std::get<1>(from_to);
 
+    
     BasicBlockType basic_block_type = processBasicBlock();
 
     bool basic_block_is_visited = isVisited(visited_blocks, block_to_process);
@@ -130,6 +139,8 @@ LTS LTSConstructor::getLTS(const std::string &name)
     }
   }
 
+  std::cout << "===============================" << std::endl;
+
   return _lts;
 }
 
@@ -143,22 +154,40 @@ void LTSConstructor::processFunctionSignature(llvm::Function *function_handle)
 
 BasicBlockType LTSConstructor::processBasicBlock()
 {
-  std::cout << "Processing: " << std::string(block_to_process->getName()) << std::endl;
+  std::cout << "Processing: " << block_to_process->getName().str() << std::endl;
   BasicBlockType basic_block_type = getBasicBlockType(block_to_process);
   bool basic_block_is_visited = isVisited(visited_blocks, block_to_process);
 
   std::cout << basic_block_type << std::endl;
   std::cout << "  Visited: " << basic_block_is_visited << std::endl;
 
+
+  interpret.checkPendingCondition(block_to_process->getName().str());
+
   // LTS structure
   if (basic_block_is_visited)
   {
     int src = previous_block_id;                // retrive LTS node ID of previous basic block
     int dst = basic_block_id[block_to_process]; // retrive LTS node ID of visited basic block
-    lts->add_edge(src, dst);                    // add edge between the two visited LTS locations
+
+    BlockStatements stmts = interpret.getBlockStatement();
+    interpret.clearCache();
+    lts->add_edge(src, dst, stmts.toStr());    // add edge between the two visited LTS locations
   }
   else
   {
+      for (const auto &inst : *block_to_process)
+      {
+        try {
+          interpret.parseInstruction(&inst);
+        }
+        catch (const UnknownInstruction& err)
+        {
+          // std::cerr << "    Unknown instruction" << std::endl;
+        }
+      }
+
+
     // produce LTS location only for branching, join and terminating basic blocks
     // for intermediary nodes, only instructions are processed
     if (!basic_block_type.is(BasicBlockType::Property::Intermediary))
@@ -166,7 +195,10 @@ BasicBlockType LTSConstructor::processBasicBlock()
       int src = previous_block_id;                                           // retrive LTS node ID of previous basic block
       int dst = lts->add_location(std::string(block_to_process->getName())); // create new location in LTS
       basic_block_id[block_to_process] = dst;                                // assign current basic block ID of create LTS location
-      lts->add_edge(src, dst);                                               // add edge from previous LTS location to the new one
+
+      BlockStatements stmts = interpret.getBlockStatement();
+      interpret.clearCache();
+      lts->add_edge(src, dst, stmts.toStr());                                               // add edge from previous LTS location to the new one
     }
 
     // add edge to LTS exit location for terminating basic block
@@ -175,8 +207,6 @@ BasicBlockType LTSConstructor::processBasicBlock()
       lts->add_edge(basic_block_id[block_to_process], lts->endLocation());
     }
   }
-
-  // TODO: Process Instructions
 
   return basic_block_type;
 }

@@ -49,3 +49,16 @@ public:
         return message;
     }
 };
+
+class UnknownInstruction : public std::exception
+{
+private:
+    char *message;
+
+public:
+    UnknownInstruction(char *msg) : message(msg) {}
+    char *what()
+    {
+        return message;
+    }
+};

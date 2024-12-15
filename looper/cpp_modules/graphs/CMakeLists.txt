@@ -7,4 +7,4 @@ target_include_directories(PyGraphs PRIVATE ${CMAKE_SOURCE_DIR}/include)
 set_target_properties(PyGraphs PROPERTIES
     OUTPUT_NAME "graphs"
     PREFIX ""
-    SUFFIX ".so")
+    SUFFIX ".cpython-312-x86_64-linux-gnu.so")

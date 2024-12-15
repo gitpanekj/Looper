@@ -1,51 +1,62 @@
+#include "expression/expression.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <string>
-#include "expression/expression.hpp"
+#include <memory>
 namespace py = pybind11;
-
+using namespace expression;
 
 
 PYBIND11_MODULE(expression, m) {
-    // Binding Expression base class
-    py::class_<expression::Expression, std::shared_ptr<expression::Expression>>(m, "Expression")
-        .def("toStr", &expression::Expression::toStr)
-        .def("replace", &expression::Expression::replace);
+    // Abstract classes
+    py::class_<Term, std::shared_ptr<Term>>(m, "Term")
+        .def("replace", &Term::replace)
+        .def("toStr", &Term::toStr)
+        .def("deepCopy", &Term::deepCopy);
 
+    py::class_<BinaryOperation, Term, std::shared_ptr<BinaryOperation>>(m, "BinaryOperation")
+        .def("toStr", &BinaryOperation::toStr)
+        .def("replace", &BinaryOperation::replace)
+        .def("deepCopy", &BinaryOperation::deepCopy);
 
-    // Bind the BinaryOperation class
-    py::class_<expression::BinaryOperation>(m, "BinaryOperation")
-        .def("getFirstOperand", &expression::BinaryOperation::getFirstOperand)
-        .def("getSecondOperand", &expression::BinaryOperation::getSecondOperand)
-        .def("setFirstOperand", &expression::BinaryOperation::setFirstOperand)
-        .def("setSecondOperand", &expression::BinaryOperation::setSecondOperand);
-
-
-    // Binding the derived classes
-    py::class_<expression::Constant, expression::Expression, std::shared_ptr<expression::Constant>>(m, "Constant")
+    // Constant
+    py::class_<IntConstant, Term, std::shared_ptr<IntConstant>>(m, "IntConstant")
         .def(py::init<int>())
-        .def("getValue", &expression::Constant::getValue)
-        .def("toStr", &expression::Constant::toStr)
-        .def("replace", &expression::Constant::replace);
+        .def("getValue", &IntConstant::getValue);
 
-    py::class_<expression::AccessPath, expression::Expression, std::shared_ptr<expression::AccessPath>>(m, "AccessPath")
+    // Variable
+    py::class_<AccessPath, Term, std::shared_ptr<AccessPath>>(m, "AccessPath")
         .def(py::init<std::string>())
-        .def("getName", &expression::AccessPath::getName)
-        .def("toStr", &expression::AccessPath::toStr)
-        .def("replace", &expression::AccessPath::replace);
+        .def("getName", &AccessPath::getName);
 
-    py::class_<expression::Add, expression::Expression, std::shared_ptr<expression::Add>>(m, "Add")
-        .def(py::init<std::shared_ptr<expression::Expression>, std::shared_ptr<expression::Expression>>())
-        .def("toStr", &expression::Add::toStr)
-        .def("replace", &expression::Add::replace);
+    // Operators
+    py::class_<Add, BinaryOperation, std::shared_ptr<Add>>(m, "Add")
+        .def(py::init<std::shared_ptr<Term>, std::shared_ptr<Term>>());
+    
+    py::class_<Sub, BinaryOperation, std::shared_ptr<Sub>>(m, "Sub")
+        .def(py::init<std::shared_ptr<Term>, std::shared_ptr<Term>>());
 
-    py::class_<expression::Sub, expression::Expression, std::shared_ptr<expression::Sub>>(m, "Sub")
-        .def(py::init<std::shared_ptr<expression::Expression>, std::shared_ptr<expression::Expression>>())
-        .def("toStr", &expression::Sub::toStr)
-        .def("replace", &expression::Sub::replace);
+    // Predicate
+    py::class_<Predicate, std::shared_ptr<Predicate>>(m, "Predicate")
+        .def("getRHS", &Predicate::getRHS)
+        .def("getLHS", &Predicate::getLHS)
+        .def("toStr",  &Predicate::toStr)
+        .def("negate", &Predicate::negate);
+    
+    py::class_<Less, Predicate, std::shared_ptr<Less>>(m, "Less")
+        .def(py::init<std::shared_ptr<Term>, std::shared_ptr<Term>>());
 
-    py::class_<expression::Mul, expression::Expression, std::shared_ptr<expression::Mul>>(m, "Mul")
-        .def(py::init<std::shared_ptr<expression::Expression>, std::shared_ptr<expression::Expression>>())
-        .def("toStr", &expression::Mul::toStr)
-        .def("replace", &expression::Mul::replace);
+    py::class_<LessOrEqual, Predicate, std::shared_ptr<LessOrEqual>>(m, "LessOrEqual")
+        .def(py::init<std::shared_ptr<Term>, std::shared_ptr<Term>>());
+
+    py::class_<Greater, Predicate, std::shared_ptr<Greater>>(m, "Greater")
+        .def(py::init<std::shared_ptr<Term>, std::shared_ptr<Term>>());
+
+    py::class_<GreaterOrEqual, Predicate, std::shared_ptr<GreaterOrEqual>>(m, "GreaterOrEqual")
+        .def(py::init<std::shared_ptr<Term>, std::shared_ptr<Term>>());
+
+    py::class_<Equal, Predicate, std::shared_ptr<Equal>>(m, "Equal")
+        .def(py::init<std::shared_ptr<Term>, std::shared_ptr<Term>>());
+    
+    py::class_<NotEqual, Predicate, std::shared_ptr<NotEqual>>(m, "NotEqual")
+        .def(py::init<std::shared_ptr<Term>, std::shared_ptr<Term>>());
 }

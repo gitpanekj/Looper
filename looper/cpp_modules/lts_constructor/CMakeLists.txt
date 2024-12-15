@@ -15,7 +15,7 @@ message(STATUS "Using LLVM_INCLUDE_DIRS in: ${LLVM_INCLUDE_DIRS}")
 #     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 # endif()
 
-add_library(lts_constructor STATIC lts_constructor.cpp cfg_utils.cpp)
+add_library(lts_constructor STATIC lts_constructor.cpp cfg_utils.cpp instruction_interpreter.cpp)
 target_link_libraries(lts_constructor graphs expression "LLVMWindowsManifest;LLVMXRay;LLVMLibDriver;LLVMDlltoolDriver;LLVMTextAPIBinaryReader;LLVMCoverage;LLVMLineEditor;LLVMX86TargetMCA;LLVMX86Disassembler;LLVMX86AsmParser;LLVMX86CodeGen;LLVMX86Desc;LLVMX86Info;LLVMOrcDebugging;LLVMOrcJIT;LLVMWindowsDriver;LLVMMCJIT;LLVMJITLink;LLVMInterpreter;LLVMExecutionEngine;LLVMRuntimeDyld;LLVMOrcTargetProcess;LLVMOrcShared;LLVMDWP;LLVMDebugInfoLogicalView;LLVMDebugInfoGSYM;LLVMOption;LLVMObjectYAML;LLVMObjCopy;LLVMMCA;LLVMMCDisassembler;LLVMLTO;LLVMPasses;LLVMHipStdPar;LLVMCFGuard;LLVMCoroutines;LLVMipo;LLVMVectorize;LLVMSandboxIR;LLVMLinker;LLVMInstrumentation;LLVMFrontendOpenMP;LLVMFrontendOffloading;LLVMFrontendOpenACC;LLVMFrontendHLSL;LLVMFrontendDriver;LLVMExtensions;LLVMDWARFLinkerParallel;LLVMDWARFLinkerClassic;LLVMDWARFLinker;LLVMGlobalISel;LLVMMIRParser;LLVMAsmPrinter;LLVMSelectionDAG;LLVMCodeGen;LLVMTarget;LLVMObjCARCOpts;LLVMCodeGenTypes;LLVMCGData;LLVMIRPrinter;LLVMInterfaceStub;LLVMFileCheck;LLVMFuzzMutate;LLVMScalarOpts;LLVMInstCombine;LLVMAggressiveInstCombine;LLVMTransformUtils;LLVMBitWriter;LLVMAnalysis;LLVMProfileData;LLVMSymbolize;LLVMDebugInfoBTF;LLVMDebugInfoPDB;LLVMDebugInfoMSF;LLVMDebugInfoDWARF;LLVMObject;LLVMTextAPI;LLVMMCParser;LLVMIRReader;LLVMAsmParser;LLVMMC;LLVMDebugInfoCodeView;LLVMBitReader;LLVMFuzzerCLI;LLVMCore;LLVMRemarks;LLVMBitstreamReader;LLVMBinaryFormat;LLVMTargetParser;LLVMTableGen;LLVMSupport;LLVMDemangle")
 
 
@@ -29,4 +29,4 @@ target_include_directories(lts PRIVATE ${CMAKE_SOURCE_DIR}/include)
 set_target_properties(lts PROPERTIES
     OUTPUT_NAME "lts"
     PREFIX ""
-    SUFFIX ".so")
+    SUFFIX ".cpython-312-x86_64-linux-gnu.so")

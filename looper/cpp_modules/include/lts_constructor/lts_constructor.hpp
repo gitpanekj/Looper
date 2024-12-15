@@ -13,7 +13,7 @@
 
 #include "graphs/labeled_transition_system.hpp"
 #include "lts_constructor/cfg_utils.hpp"
-
+#include "lts_constructor/instruction_interpreter.hpp"
 
 using LTS = graphs::LabeledTransitionSystem<std::string, std::string>;
 
@@ -26,6 +26,7 @@ private:
 
 
     // LTS construction
+    InstructionInterpreter interpret;
     LTS* lts;
     llvm::BasicBlock *block_to_process;
     int previous_block_id;
