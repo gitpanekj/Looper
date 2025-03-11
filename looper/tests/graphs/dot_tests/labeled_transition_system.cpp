@@ -18,14 +18,14 @@ std::string empty_graph()
 std::string single_node()
 {
     DirectedLabeledGraph<std::string, std::string> single_node_graph;
-    single_node_graph.add_node("Node 1");
+    single_node_graph.add_vertex("Node 1");
     return single_node_graph.convert_to_dot();
 }
 
 std::string single_node_self_edge()
 {
     DirectedLabeledGraph<std::string, std::string> single_node_graph;
-    int id = single_node_graph.add_node("Node 1");
+    int id = single_node_graph.add_vertex("Node 1");
     single_node_graph.add_edge(id, id, "Label");
     return single_node_graph.convert_to_dot();
 }
@@ -33,26 +33,26 @@ std::string single_node_self_edge()
 std::string two_nodes()
 {
     DirectedLabeledGraph<std::string, std::string> two_node_graph;
-    int id1 = two_node_graph.add_node("Node 1");
-    int id2 = two_node_graph.add_node("Node 2");
+    int id1 = two_node_graph.add_vertex("Node 1");
+    int id2 = two_node_graph.add_vertex("Node 2");
     return two_node_graph.convert_to_dot();
 }
 
 std::string multiple_nodes()
 {
     DirectedLabeledGraph<std::string, std::string> two_node_graph;
-    int id1 = two_node_graph.add_node("Node 1");
-    int id2 = two_node_graph.add_node("Node 2");
-    int id3 = two_node_graph.add_node("Node 3");
-    int id4 = two_node_graph.add_node("Node 4");
+    int id1 = two_node_graph.add_vertex("Node 1");
+    int id2 = two_node_graph.add_vertex("Node 2");
+    int id3 = two_node_graph.add_vertex("Node 3");
+    int id4 = two_node_graph.add_vertex("Node 4");
     return two_node_graph.convert_to_dot();
 }
 
 std::string two_connected_nodes()
 {
     DirectedLabeledGraph<std::string, std::string> two_connected_node_graph;
-    int id1 = two_connected_node_graph.add_node("Node 1");
-    int id2 = two_connected_node_graph.add_node("Node 2");
+    int id1 = two_connected_node_graph.add_vertex("Node 1");
+    int id2 = two_connected_node_graph.add_vertex("Node 2");
     two_connected_node_graph.add_edge(id1, id2, "Label");
     return two_connected_node_graph.convert_to_dot();
 }
@@ -60,10 +60,10 @@ std::string two_connected_nodes()
 std::string multiple_connected_nodes()
 {
     DirectedLabeledGraph<std::string, std::string> multiple_node_graph;
-    int id1 = multiple_node_graph.add_node("Node 1");
-    int id2 = multiple_node_graph.add_node("Node 2");
-    int id3 = multiple_node_graph.add_node("Node 3");
-    int id4 = multiple_node_graph.add_node("Node 4");
+    int id1 = multiple_node_graph.add_vertex("Node 1");
+    int id2 = multiple_node_graph.add_vertex("Node 2");
+    int id3 = multiple_node_graph.add_vertex("Node 3");
+    int id4 = multiple_node_graph.add_vertex("Node 4");
     multiple_node_graph.add_edge(id1, id1, "Label");
     multiple_node_graph.add_edge(id2, id2, "Label");
     multiple_node_graph.add_edge(id3, id3, "Label");
@@ -78,8 +78,8 @@ std::string multiple_connected_nodes()
 std::string two_nodes_multiple_edges()
 {
     DirectedLabeledGraph<std::string, std::string> two_node_graph_multiple_edges;
-    int id1 = two_node_graph_multiple_edges.add_node("Node 1");
-    int id2 = two_node_graph_multiple_edges.add_node("Node 2");
+    int id1 = two_node_graph_multiple_edges.add_vertex("Node 1");
+    int id2 = two_node_graph_multiple_edges.add_vertex("Node 2");
     two_node_graph_multiple_edges.add_edge(id1, id2, "Label 1");
     two_node_graph_multiple_edges.add_edge(id1, id2, "Label 2");
     two_node_graph_multiple_edges.add_edge(id1, id2, "Label 3");

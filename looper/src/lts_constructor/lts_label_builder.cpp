@@ -1,0 +1,120 @@
+#include "lts_constructor/LLVMIRInterpreter/lts_label_builder.hpp"
+#include "lts_constructor/LLVMIRInterpreter/LTS_execution_context.hpp"
+#include "expression/expression.hpp"
+#include "expression/predicate.hpp"
+
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Value.h"
+#include "llvm/IR/Type.h"
+#include "llvm/IR/Constants.h"
+
+LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS(LTSLabelBuilder, TransitionExecutionContext)
+    // Arithmetic
+    INSTRUCTION_HANDLER(Add){
+        std::shared_ptr<Expression> op1 = ctx.get_operand( inst->getOperand(0));
+        std::shared_ptr<Expression> op2 = ctx.get_operand( inst->getOperand(1));
+        std::string store_access_path = inst->getName().str();
+        std::shared_ptr<Expression> add = Expression::create_addition(op1, op2);
+        ctx.expression_cache[store_access_path] = add;
+    }
+    //IMPLEMENTS_INSTRUCTION(FAdd);
+    INSTRUCTION_HANDLER(Sub){
+        std::shared_ptr<Expression> op1 = ctx.get_operand( inst->getOperand(0));
+        std::shared_ptr<Expression> op2 = ctx.get_operand( inst->getOperand(1));
+        std::string store_access_path = inst->getName().str();
+        std::shared_ptr<Expression> sub = Expression::create_subtraction(op1, op2);
+        ctx.expression_cache[store_access_path] = sub;
+    }
+    //IMPLEMENTS_INSTRUCTION(FSub);
+    INSTRUCTION_HANDLER(Mul){
+        std::shared_ptr<Expression> op1 = ctx.get_operand( inst->getOperand(0));
+        std::shared_ptr<Expression> op2 = ctx.get_operand( inst->getOperand(1));
+        std::string store_access_path = inst->getName().str();
+        std::shared_ptr<Expression> mul = Expression::create_multiplication(op1, op2);
+        ctx.expression_cache[store_access_path] = mul;
+    }
+    //IMPLEMENTS_INSTRUCTION(FMul);
+    //IMPLEMENTS_INSTRUCTION(UDiv);
+    //IMPLEMENTS_INSTRUCTION(SDiv);
+    //IMPLEMENTS_INSTRUCTION(FDiv);
+    //IMPLEMENTS_INSTRUCTION(URem);
+    //IMPLEMENTS_INSTRUCTION(SRem);
+    //IMPLEMENTS_INSTRUCTION(FRem);
+
+    // Bitwise
+    //IMPLEMENTS_INSTRUCTION(Shl);
+    //IMPLEMENTS_INSTRUCTION(LSh);
+    //IMPLEMENTS_INSTRUCTION(ASh);
+    //IMPLEMENTS_INSTRUCTION(And);
+    //IMPLEMENTS_INSTRUCTION(Or,);
+    //IMPLEMENTS_INSTRUCTION(Xor);
+
+    // Compare
+    INSTRUCTION_HANDLER(ICmp){
+        
+        std::shared_ptr<Expression> op1 = ctx.get_operand( inst->getOperand(0));
+        std::shared_ptr<Expression> op2 = ctx.get_operand( inst->getOperand(1));
+        std::string store_access_path = inst->getName().str();
+
+        switch (((llvm::ICmpInst *) inst)->getPredicate())
+        {
+            case llvm::ICmpInst::Predicate::ICMP_EQ:
+                ctx.predicate_cache[store_access_path] = std::make_shared<Equal>(op1, op2);
+                break;
+            case llvm::ICmpInst::Predicate::ICMP_NE:
+            ctx.predicate_cache[store_access_path] = std::make_shared<NotEqual>(op1, op2);
+            break;
+            case llvm::ICmpInst::Predicate::ICMP_SGE:
+            case llvm::ICmpInst::Predicate::ICMP_UGE:
+            ctx.predicate_cache[store_access_path] = std::make_shared<GreaterOrEqual>(op1, op2);
+            break;
+            case llvm::ICmpInst::Predicate::ICMP_UGT:
+            case llvm::ICmpInst::Predicate::ICMP_SGT:
+                ctx.predicate_cache[store_access_path] = std::make_shared<Greater>(op1, op2);
+                break;
+            case llvm::ICmpInst::Predicate::ICMP_SLE:
+            case llvm::ICmpInst::Predicate::ICMP_ULE:
+                ctx.predicate_cache[store_access_path] = std::make_shared<LessOrEqual>(op1, op2);
+                break;
+            case llvm::ICmpInst::Predicate::ICMP_ULT:
+            case llvm::ICmpInst::Predicate::ICMP_SLT:
+                ctx.predicate_cache[store_access_path] = std::make_shared<Less>(op1, op2);
+                break;
+        }
+    }
+
+    INSTRUCTION_HANDLER(Br){
+        llvm::BranchInst *br = (llvm::BranchInst *)inst;
+        if (br->isUnconditional()){
+            // TODO: logging
+            return;
+        }
+    
+        std::shared_ptr<Predicate> condition = ctx.predicate_cache.find(br->getCondition()->getName().str())->second;
+    
+        std::string true_branch = br->getSuccessor(0)->getName().str();
+        std::string false_branch = br->getSuccessor(1)->getName().str();
+    
+        ctx.block_name_to_predicate[true_branch] = {condition, true};
+        ctx.block_name_to_predicate[false_branch] = {condition->negate(), false};
+    }
+    //IMPLEMENTS_INSTRUCTION(FCmp);
+
+    // Function call
+    // INSTRUCTION_HANDLER(Call){}
+
+    // Memmory
+    //IMPLEMENTS_INSTRUCTION(Alloc, LabelType);
+    INSTRUCTION_HANDLER(Load){
+        std::string load_access_path = inst->getNameOrAsOperand();
+        std::shared_ptr<Expression> loaded_value = ctx.get_operand( inst->getOperand(0));
+        ctx.expression_cache[load_access_path] = loaded_value;
+    }
+    INSTRUCTION_HANDLER(Store){
+        std::string store_access_path = inst->getOperand(1)->getNameOrAsOperand();
+        std::shared_ptr<Expression> stored_value = ctx.get_operand( inst->getOperand(0));
+        ctx.statement_batch.push_back(LTSTransitionAssignment(store_access_path, stored_value));
+        //ctx.expression_cache[store_access_path] = stored_value;
+    }
+LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS_END

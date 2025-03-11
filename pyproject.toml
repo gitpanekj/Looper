@@ -20,13 +20,21 @@ requires-python = ">=3.10"
 dependencies = [
     "z3-solver",
     "click",
+    "pyyaml",
     "pytest",
     "pytest-cov"
 ]
 
 [tool.setuptools]
-package-dir = {"" = "looper"}
-packages = ["looper", "bindings"]
+include-package-data = true 
+
+[tool.setuptools.packages.find]
+where = ["looper", "looper/modules"]
+
+[tool.setuptools.package-data]
+"modules.expression" = ["expression/*.so"]
+"modules.graphs" = ["graphs/*.so"]
+"modules.lts" = ["lts/*.so"]
 
 [project.scripts]
 looper = "looper:cli_run_analysis"

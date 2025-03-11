@@ -53,34 +53,49 @@
 // }
 
 
-int multiple_return_simple(int n)
-{
-    if (n > 0){
-        n++;
-        return n;
-    }
-    else if (n < 0){
-        n--;
-        return n;
-    }
-    else {
-        n = 100;
-        return n;
-    }
-}
+// int multiple_return_simple(int n)
+// {
+//     if (n > 0){
+//         n++;
+//         return n;
+//     }
+//     else if (n < 0){
+//         n--;
+//         return n;
+//     }
+//     else {
+//         n = 100;
+//         return n;
+//     }
+// }
+
+// void foo(int n){
+//     int i;
+    
+//     if (n < 10){
+//         i = n;
+//         i ++;
+//     }
+//     else {
+//         i = 2*n;
+//         i--;
+//     }
+// }
 
 
-void multiple_return_loop(int n)
-{
-    if (n < 0) return;
+// void multiple_return_loop(int n)
+// {
+//     if (n < 0) return;
 
-    while (n > 0){
-        n--;
-        if (n == 10) return;
-    }
+//     while (n > 0){
+//         n--;
+//         if (n == 10) return;
+//     }
 
-    return;
-}
+//     return;
+// }
+
+
 
 
 
@@ -102,19 +117,43 @@ void multiple_return_loop(int n)
 // }
 
 
-void nested_loop(int n)
+void nested_loop(int n, int m) // 2*n^2 + n
 {
-    int i,j;
+    int i,j,k;
     i = n;
-    while(i > 0)
+    
+    while(i > 0) // n^2
     {
         j = n;
-        while (j > 0)
+        k = m;
+        while (k > j)
         {
-            j--;
-        }
+            j++;
+        }  
         i--;
     }
+
+    // while (k > 5){ k--; } // n^2
+}
+
+void nop(){}
+
+void for_loops(int n, int m)
+{
+    int counter = 0;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            counter++;
+        }
+    }
+
+    while (counter > 0)
+    {
+        counter--;
+    }
+
 }
 
 

@@ -1,0 +1,99 @@
+#ifndef LTS_EXECUTION_CONTEXT
+#define LTS_EXECUTION_CONTEXT
+
+#include <unordered_map>
+#include <vector>
+#include <memory>
+
+#include "expression/expression.hpp"
+#include "expression/predicate.hpp"
+#include "graphs/lts_labels.hpp"
+
+#include "llvm/IR/Value.h"
+#include "llvm/IR/Constants.h"
+
+struct TransitionExecutionContext
+{
+    std::unordered_map<std::string, std::shared_ptr<Expression>> expression_cache; //< mapping of temporary variables to expressions they represent
+    std::unordered_map<std::string, std::shared_ptr<Predicate>> predicate_cache;   //< mapping of temporary variables to predicate they represent
+
+    std::unordered_map<std::string, std::tuple<std::shared_ptr<Predicate>, bool>> block_name_to_predicate; //< mapping of the block names which are destination of jump instruction to predicate
+    std::vector<LTSTransitionAssignment> statement_batch; //< vector of assignments which label an LTS edge
+    LTSTransitionCondition pending_condition;             //< condition labeling the next edge to be created
+
+    void clear() {
+        expression_cache.clear();
+        predicate_cache.clear();
+        statement_batch.clear();
+        //block_name_to_predicate.clear();
+        pending_condition = LTSTransitionCondition();
+    }
+
+    void check_target_node_of_jump(std::string basic_block_name){
+        auto it = block_name_to_predicate.find(basic_block_name);
+        if (it != block_name_to_predicate.end())
+        {
+            bool true_branch;
+            std::shared_ptr<Predicate> condition;
+            std::tie(condition, true_branch) = it->second;
+            pending_condition = LTSTransitionCondition(condition, true_branch);
+            block_name_to_predicate.erase(basic_block_name);
+        }
+    }
+
+    LTSTransitionLabel get_transition_label(){
+        LTSTransitionLabel transition_label;
+        if (pending_condition.condition.size() > 0){
+            transition_label = LTSTransitionLabel(pending_condition, statement_batch);
+        }
+        else 
+        {
+            transition_label = LTSTransitionLabel(statement_batch);
+        }
+        clear();
+        return transition_label;
+    }
+
+    std::shared_ptr<Expression> get_operand(llvm::Value *operand)
+{
+
+    // named variable (original or generated)
+    if (operand->hasName())
+    {
+        std::string var_name = operand->getName().str();
+        auto it = expression_cache.find(var_name);
+        if (it != expression_cache.end())
+        {
+            return it->second;
+        }
+
+        return Expression::create_variable(var_name);
+    }
+
+    // temporary variable
+    if (llvm::isa<llvm::Instruction>(operand))
+    {
+        std::string temp_var_name = operand->getNameOrAsOperand();
+        auto it = expression_cache.find(temp_var_name);
+        if (it != expression_cache.end())
+        {
+            return it->second;
+        }
+
+        return Expression::create_variable(temp_var_name);
+    }
+
+    // constant
+    if (llvm::isa<llvm::ConstantInt>(operand))
+    {
+        llvm::ConstantInt *const_int = (llvm::ConstantInt *)operand;
+        return Expression::create_constant(const_int->getValue().getSExtValue());
+    }
+
+    // unknow
+    return Expression::create_variable("#UNKNOWN#");
+}
+
+};
+
+#endif
