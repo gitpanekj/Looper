@@ -7,3 +7,4 @@ __pycache__
 *.bc
 *.ll
 looper.egg-info
+tests/results
