@@ -6,10 +6,7 @@ import click
 
 from looper.config import Configuration
 from looper.bound_analysis import *
-from looper.utils.output import YAMLStorageManager, Logger
-
-analysis_log = Logger()
-
+from looper.utils.output import YAMLStorageManager, analysis_logger
 
 
 @click.command()
@@ -56,7 +53,7 @@ def run_analysis(filename: Path) -> int:
         if Configuration['profiling'] or Configuration['logging'] or Configuration['graphs']:
             if not os.path.isdir(function_analysis_log_directory):
                 os.mkdir(function_analysis_log_directory)
-        analysis_log.set_output_path(function_analysis_log_directory)
+        analysis_logger.set_output_path(function_analysis_log_directory)
         
         # Function Analysis
         function_analysis_result = analyze_function(compiled_unit, function_name)

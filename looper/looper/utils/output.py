@@ -73,3 +73,5 @@ class Logger:
             if len(self.cache) > 0:
                 self.log(self.filename, self.results)
             self.file.close()
+
+analysis_logger = Logger()

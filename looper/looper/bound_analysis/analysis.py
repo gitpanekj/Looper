@@ -6,6 +6,8 @@ from lts import LLVMIRProcessor
 from looper.dcp_construction import build_dcp
 from .bound_algorithm import *
 from time import perf_counter_ns
+from looper.config import Configuration
+from looper.utils import analysis_logger
 
 CLANG: Path = Path("/home/panekj/llvm-install/bin/clang")
 CLANG_ARGS: str = "-Xclang -disable-O0-optnone -fno-discard-value-names"
@@ -50,6 +52,10 @@ def analyze_function(compiled_unit, function_name) -> FunctionAnalysisResult:
     
     dcp, norms = build_dcp(lts)
     bound = total_bound(dcp, norms)
+    
+    if Configuration['graphs']:
+        analysis_logger.save_in_directory('lts.dot', lts.convert_to_dot())
+        analysis_logger.save_in_directory('dcp.dot', dcp.convert_to_dot())
     
     return FunctionAnalysisResult(function_name, str(bound) if bound else "Top", "", (perf_counter_ns() - start)/1000_000)
     
