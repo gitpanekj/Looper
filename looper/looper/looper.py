@@ -34,13 +34,7 @@ def run_analysis(filename: Path) -> int:
     if not os.path.isdir(result_directory.as_posix()):
         print(f"looper: \033[1;31merror:\033[0m: \033[1mDirectory '{result_directory}' does not exist.\033[0m", file=sys.stderr)
         return 1
-        
-    result_directory /= 'results'
-    if not os.path.isdir(result_directory.as_posix()):
-        os.mkdir(result_directory.as_posix())
-    
-    analysis_result_manager = YAMLStorageManager((result_directory / 'bounds.yaml').as_posix())
-    
+            
     # parse c source to LLVM IR
     try:
         compiled_unit = compile(filename)
@@ -48,6 +42,12 @@ def run_analysis(filename: Path) -> int:
         # TODO: logging
         print("looper: \033[1;31merror:\033[0m \033[1mCompilation failed.\033[0m", file=sys.stderr)
         return 1
+    
+    result_directory /= 'results'
+    if not os.path.isdir(result_directory.as_posix()):
+        os.mkdir(result_directory.as_posix())
+    
+    analysis_result_manager = YAMLStorageManager((result_directory / 'bounds.yaml').as_posix())
     
     for function_name in compiled_unit.get_functions():
         
