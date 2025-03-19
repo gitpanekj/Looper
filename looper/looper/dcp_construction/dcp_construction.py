@@ -96,9 +96,7 @@ def infer_dcp_labels(lts: LTS, dcp: DCP) -> DCP:
         for (edge, statements, condition) in edges:
             # 1) check whether it is a guard
             # if condition -> norm > 0 dcp_edge_data.add_guard(norm)
-            if condition:
-                
-                
+            if condition and condition.get_norm(): # TODO: patch solution, check whether a norm can be infferred from the condition
                 ctx.update({v.replace('.', '_'):Int(v) for v in condition.get_norm()[0][0].get_variable_names()})
                 
                 z3_norm = eval(str(norm).replace('.', '_'), {}, ctx)

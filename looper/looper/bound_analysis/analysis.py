@@ -50,6 +50,7 @@ def analyze_function(compiled_unit, function_name) -> FunctionAnalysisResult:
     except Exception:
         return FunctionAnalysisResult(function_name, "UNKNOWN", "Failed to construct LTS.")
     
+    print(function_name)
     dcp, norms = build_dcp(lts)
     bound = total_bound(dcp, norms)
     

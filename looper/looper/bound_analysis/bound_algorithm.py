@@ -124,9 +124,7 @@ def reset_sum(dcp, local_bound_assignment, norm) -> Expression:
             _variable_bound = variable_bound(dcp, local_bound_assignment, constraint.y) + constraint.c # TODO change to max of resets
             if not _variable_bound:
                 return None
-
             _reset_sum += _transition_bound * _variable_bound
-    
     return _reset_sum
 
         
@@ -159,7 +157,6 @@ def total_bound(dcp, norms) -> Expression | None:
     for back_edge in back_edges:
         
         bound = transition_bound(dcp, local_bound_assignment, back_edge)
-        
         if not bound:
             return None
         total_bound += bound
