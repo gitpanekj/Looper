@@ -46,13 +46,15 @@ struct TransitionExecutionContext
     LTSTransitionLabel get_transition_label()
     {
         LTSTransitionLabel transition_label;
+        std::vector<LTSTransitionAssignment> state_change;
+        state_change = determine_program_state_change(statement_batch);
         if (pending_condition.condition.size() > 0)
         {
-            transition_label = LTSTransitionLabel(pending_condition, statement_batch);
+            transition_label = LTSTransitionLabel(pending_condition, state_change);
         }
         else
         {
-            transition_label = LTSTransitionLabel(statement_batch);
+            transition_label = LTSTransitionLabel(state_change);
         }
         clear();
         return transition_label;
@@ -98,8 +100,9 @@ struct TransitionExecutionContext
         return Expression::create_variable("#UNKNOWN#");
     }
 
-    std::vector<LTSTransitionAssignment>& determine_program_state_change(std::vector<LTSTransitionAssignment>& statements)
+    std::vector<LTSTransitionAssignment> determine_program_state_change(std::vector<LTSTransitionAssignment>& statements)
     {
+        std::vector<LTSTransitionAssignment> state_change;
         std::unordered_map<std::string, std::shared_ptr<Expression>> state;
         for (const auto& [lhs, rhs] : statements)
         {
@@ -108,27 +111,46 @@ struct TransitionExecutionContext
             // add a=a' for each untracked variable in RHS
             if (state.find(lhs) == state.end())
             {
-                state[lhs] = rhs;
+                state[lhs] = Expression::create_variable(lhs+"@");
             }
 
             for (const auto var : rhs->get_variable_names())
             {
-                if (state.find(lhs) == state.end())
+                if (state.find(var) == state.end())
                 {
-                    state[lhs] = Expression::create_variable(var);
+                    state[var] = Expression::create_variable(var+"@");
                 }
             }
 
             // Evaluate RHS over current program state and update program state after assignment to LHS
-            
+            auto state_rhs = rhs->copy();
+            for (const auto var : state_rhs->get_variable_names())
+            {
+                state_rhs->substitute(var, state[var]->copy());
+            }
 
+            state[lhs] = state_rhs;
         }
 
-        // Omit all the predicates of form a = a' (variable value does not chage)
+        // Transition assignment modelling how the progrma state changes
+        for (const auto& [lhs, rhs] : state)
+        {
+            // Remove @ from variable names in RHS
+            for (const auto var : rhs->get_variable_names())
+            {
+                std::string new_name = var;
+                new_name.pop_back();
+                rhs->rename_variable(var, new_name);
+            }
+
+            // Ommit a = a
+            if (Expression::create_variable(lhs) == rhs) continue;
+            
+            state_change.push_back(LTSTransitionAssignment(lhs, rhs));
+        }
+
+        return state_change;
     }
-
-
-    
 };
 
 #endif
