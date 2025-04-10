@@ -49,7 +49,6 @@ public:
     virtual std::shared_ptr<ASTNodeBase> copy() = 0;                                                          //< Return a pointer to a deep copy of an AST starting from the AST node
     virtual std::shared_ptr<ASTNodeBase> expand() = 0;                                                        //< Return a pointer to an AST after application of distribution law
     virtual std::shared_ptr<ASTNodeBase> substitute(std::string name, std::shared_ptr<ASTNodeBase> expr) = 0; //< Return a pointer to an AST with variables with give name sibstituted with expr
-    virtual void rename_variable(std::string from, std::string to) = 0;                                       //< Rename variable in the expression
 
     /**************  Getters, setters **************/
     ASTNodeType get_type() const { return type; }               //< Return an AST node type
@@ -95,7 +94,6 @@ public:
     std::shared_ptr<ASTNodeBase> copy() override { return std::make_shared<ASTIntegerConstantNode>(value); }
     std::shared_ptr<ASTNodeBase> expand() override { return shared_from_this(); }
     std::shared_ptr<ASTNodeBase> substitute(std::string name, std::shared_ptr<ASTNodeBase> expr) override { return shared_from_this(); }
-    void rename_variable(std::string from, std::string to) override {};
 
     /**************  Getters, setters **************/
     // Constant
@@ -140,7 +138,7 @@ public:
         // NOTE: required since all the expressions at the top level are represented as addition of multiplications
         if (expr->get_type() == ASTNodeType::Addition && expr->get_operands().size() == 1)
         {
-            return expr->get_operands()[0];
+            return expr->get_operands()[0]->copy();
         }
 
         // Substituted expression is addition with no operand (equivalent of 0 term)
@@ -150,14 +148,8 @@ public:
             return std::make_shared<ASTIntegerConstantNode>(0);
         }
 
-        return expr; // substituted expression
+        return expr->copy(); // substituted expression
     }
-
-    void rename_variable(std::string from, std::string to) override {
-        if (name == from){name = to;}
-        upadte_expression_string();
-        upadte_hash_string();
-    };
 
     /**************  Getters and setters **************/
     // Constant
@@ -192,14 +184,6 @@ public:
     std::shared_ptr<ASTNodeBase> copy() override;
     std::shared_ptr<ASTNodeBase> expand() override;
     std::shared_ptr<ASTNodeBase> substitute(std::string _name, std::shared_ptr<ASTNodeBase> expr) override;
-    void rename_variable(std::string from, std::string to) override {
-        for (auto term : get_variable_terms())
-        {
-            term->rename_variable(from, to);
-        }
-        upadte_expression_string();
-        upadte_hash_string();
-    };
 
     /**************  Getters, setters **************/
     // Constant
@@ -241,14 +225,6 @@ public:
     std::shared_ptr<ASTNodeBase> copy() override;
     std::shared_ptr<ASTNodeBase> expand() override;
     std::shared_ptr<ASTNodeBase> substitute(std::string _name, std::shared_ptr<ASTNodeBase> expr) override;
-    void rename_variable(std::string from, std::string to) override {
-        for (auto term : get_variable_terms())
-        {
-            term->rename_variable(from, to);
-        }
-        upadte_expression_string();
-        upadte_hash_string();
-    };
 
     /**************  Getters, setters **************/
     // Constant
