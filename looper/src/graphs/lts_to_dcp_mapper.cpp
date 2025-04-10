@@ -3,6 +3,9 @@
 
 namespace graphs
 {
+    /**
+     * @brief Create dcp structure without edge labels for given lts.
+     */
     void lts_to_dcp_mapper(LabeledTransitionSystem& lts, DifferenceConstraintProgram& dcp)
     {
         // LTS related mappings
@@ -12,6 +15,8 @@ namespace graphs
         dcp.loop_heads = lts.get_loop_heads();
 
         // DeepCopy
+
+        // Copy outgoing edges
         for (const auto& [key, edge_list] : lts.get_outgoing_edges()) {
             dcp.outgoing_edges[key] = std::list<DifferenceConstraintProgram::OutgoingEdge>();
             for (const auto& elem : edge_list){
@@ -19,6 +24,7 @@ namespace graphs
             }
         }
 
+        // Copy ingoing edges
         for (const auto& [key, edge_list] : lts.get_ingoing_edges()) {
             dcp.ingoing_edges[key] = std::list<DifferenceConstraintProgram::IngoingEdge>();
             for (const auto& elem : edge_list){
@@ -26,11 +32,12 @@ namespace graphs
             }
         }
 
+        // Copy edge if mapping
         for (const auto& [key, mapping] : lts.get_id_to_edge_mapping()) {
             dcp.id_to_edge_mapping[key] = mapping;
         }
 
-
+        // Copy vertex labels
         for (const auto& [key, label] : lts.get_all_node_data()) {
             dcp.vertices_data[key] = label;
         }

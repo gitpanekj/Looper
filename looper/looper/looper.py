@@ -7,7 +7,7 @@ import click
 from looper.config import Configuration
 from looper.bound_analysis import *
 from looper.utils.output import YAMLStorageManager, analysis_logger
-
+from looper.profiling import ProfilingManager
 
 @click.command()
 @click.option('--file', help="File to be analyzed.")

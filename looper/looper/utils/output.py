@@ -55,10 +55,20 @@ class Logger:
         
     def log(self, message) -> None:
         if Configuration['logging']:
-            self.cache.append(message)
+            self.cache.append(message + "\n")
             if len(self.cache) > self.result_cache_size:
-                self.save_results_to_yaml(self.filename, self.results)
-                self.results.clear()
+                self.save_to_txt(self.file, self.cache)
+                self.cache.clear()
+    
+    def error(self, message) -> None:
+        self.log(f"ERROR: {message}")
+    
+    def info(self, message) -> None:
+        self.log(f"INFO: {message}")
+    
+    def warning(self, message) -> None:
+        self.log(f"WARNING: {message}")
+    
     
     def save_in_directory(self, filename, content):
         with open(Path(self.directory) / Path(filename), "w") as f:
@@ -66,12 +76,13 @@ class Logger:
     
     @staticmethod
     def save_to_txt(file, results):
-        file.write(results.join('\n'))
+        file.writelines(results)
             
     def __del__(self):
         if self.file:
             if len(self.cache) > 0:
-                self.log(self.filename, self.results)
+                self.save_to_txt(self.file, self.cache)
+                self.cache.clear()
             self.file.close()
 
 analysis_logger = Logger()

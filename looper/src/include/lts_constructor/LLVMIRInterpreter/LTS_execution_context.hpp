@@ -18,18 +18,20 @@ struct TransitionExecutionContext
     std::unordered_map<std::string, std::shared_ptr<Predicate>> predicate_cache;   //< mapping of temporary variables to predicate they represent
 
     std::unordered_map<std::string, std::tuple<std::shared_ptr<Predicate>, bool>> block_name_to_predicate; //< mapping of the block names which are destination of jump instruction to predicate
-    std::vector<LTSTransitionAssignment> statement_batch; //< vector of assignments which label an LTS edge
-    LTSTransitionCondition pending_condition;             //< condition labeling the next edge to be created
+    std::vector<LTSTransitionAssignment> statement_batch;                                                  //< vector of assignments which label an LTS edge
+    LTSTransitionCondition pending_condition;                                                              //< condition labeling the next edge to be created
 
-    void clear() {
+    void clear()
+    {
         expression_cache.clear();
         predicate_cache.clear();
         statement_batch.clear();
-        //block_name_to_predicate.clear();
+        // block_name_to_predicate.clear();
         pending_condition = LTSTransitionCondition();
     }
 
-    void check_target_node_of_jump(std::string basic_block_name){
+    void check_target_node_of_jump(std::string basic_block_name)
+    {
         auto it = block_name_to_predicate.find(basic_block_name);
         if (it != block_name_to_predicate.end())
         {
@@ -41,12 +43,14 @@ struct TransitionExecutionContext
         }
     }
 
-    LTSTransitionLabel get_transition_label(){
+    LTSTransitionLabel get_transition_label()
+    {
         LTSTransitionLabel transition_label;
-        if (pending_condition.condition.size() > 0){
+        if (pending_condition.condition.size() > 0)
+        {
             transition_label = LTSTransitionLabel(pending_condition, statement_batch);
         }
-        else 
+        else
         {
             transition_label = LTSTransitionLabel(statement_batch);
         }
@@ -55,45 +59,44 @@ struct TransitionExecutionContext
     }
 
     std::shared_ptr<Expression> get_operand(llvm::Value *operand)
-{
-
-    // named variable (original or generated)
-    if (operand->hasName())
     {
-        std::string var_name = operand->getName().str();
-        auto it = expression_cache.find(var_name);
-        if (it != expression_cache.end())
+
+        // named variable (original or generated)
+        if (operand->hasName())
         {
-            return it->second;
+            std::string var_name = operand->getName().str();
+            auto it = expression_cache.find(var_name);
+            if (it != expression_cache.end())
+            {
+                return it->second;
+            }
+
+            return Expression::create_variable(var_name);
         }
 
-        return Expression::create_variable(var_name);
-    }
-
-    // temporary variable
-    if (llvm::isa<llvm::Instruction>(operand))
-    {
-        std::string temp_var_name = operand->getNameOrAsOperand();
-        auto it = expression_cache.find(temp_var_name);
-        if (it != expression_cache.end())
+        // temporary variable
+        if (llvm::isa<llvm::Instruction>(operand))
         {
-            return it->second;
+            std::string temp_var_name = operand->getNameOrAsOperand();
+            auto it = expression_cache.find(temp_var_name);
+            if (it != expression_cache.end())
+            {
+                return it->second;
+            }
+
+            return Expression::create_variable(temp_var_name);
         }
 
-        return Expression::create_variable(temp_var_name);
+        // constant
+        if (llvm::isa<llvm::ConstantInt>(operand))
+        {
+            llvm::ConstantInt *const_int = (llvm::ConstantInt *)operand;
+            return Expression::create_constant(const_int->getValue().getSExtValue());
+        }
+
+        // unknow
+        return Expression::create_variable("#UNKNOWN#");
     }
-
-    // constant
-    if (llvm::isa<llvm::ConstantInt>(operand))
-    {
-        llvm::ConstantInt *const_int = (llvm::ConstantInt *)operand;
-        return Expression::create_constant(const_int->getValue().getSExtValue());
-    }
-
-    // unknow
-    return Expression::create_variable("#UNKNOWN#");
-}
-
 };
 
 #endif

@@ -10,6 +10,7 @@ from graphs import (DifferenceConstraintProgram as DCP,
                     DCPTransitionLabel,
                     LabeledTransitionSystem as LTS,
                     lts_to_dcp)
+from looper.utils import analysis_logger
 
 DCPConstructionWatch = ProfilingManager.watch('dcp_construction')
 
@@ -85,15 +86,17 @@ def infer_dcp_labels(lts: LTS, dcp: DCP) -> DCP:
     
     dcp_edge_data = {edge: DCPTransitionLabel() for edge in lts.get_edges()}
     
-    
+    analysis_logger.log(f"\tInitial set of norms: {norms_to_process}")
     while len(norms_to_process) != 0:
         norm = norms_to_process.pop()
         stable_norm_set.append(norm)
-        
+        analysis_logger.log(f"\tDerving transition labels for: {norm}")
+
         ctx = {v.replace('.', '_'):Int(v) for v in norm.get_variable_names()}
         
         
         for (edge, statements, condition) in edges:
+            analysis_logger.log(f"\t  EDGE  {edge}")
             # 1) check whether it is a guard
             # if condition -> norm > 0 dcp_edge_data.add_guard(norm)
             if condition and condition.get_norm(): # TODO: patch solution, check whether a norm can be infferred from the condition
@@ -105,13 +108,17 @@ def infer_dcp_labels(lts: LTS, dcp: DCP) -> DCP:
                 solver.reset()
                 solver.add(formula)
                 
-                
                 if solver.check() == unsat: # i.e.valid
+                    analysis_logger.log(f"\t    - guard {formula} - [YES]")
                     dcp_edge_data[edge].add_guard(norm)
+                else:
+                    analysis_logger.log(f"\t    - guard {formula} - [NO]")
                 
             
             # 2) Check whether a new norm was generated
             resulting_norm = execute_transition(norm, statements)
+            # TODO check whether it is built solely over constants
+            # if so, continue
          
             for n in chain(stable_norm_set, norms_to_process):
                 diff = resulting_norm - n
@@ -121,31 +128,32 @@ def infer_dcp_labels(lts: LTS, dcp: DCP) -> DCP:
                     if diff != ZERO or norm != n:
                         
                         dc = DC(norm, n, diff, False)
-                        
+                        analysis_logger.log(f"\t    - derived DC: {dc}")
+                        analysis_logger.log(f"\t    - derived DC in NORMS: [OK] found {n}")
                         dcp_edge_data[edge].add_dc(dc)
-                        
                     break
             else:
                 const = resulting_norm.separate_constant()
                 c = Expression.create_constant(const)
-                resulting_norm -= c        
+                resulting_norm -= c
                 dc = DC(norm, resulting_norm, c, False)
                 dcp_edge_data[edge].add_dc(dc)
                 norms_to_process.append(resulting_norm)
-
-    for edge, label in dcp_edge_data.items():
-        dcp.set_edge_data(edge, label)
+                analysis_logger.log(f"\t    - derived DC: {dc}")
+                analysis_logger.log(f"\t    - derived DC in NORMS: [NO]")
     
     # TODO guard propagation
     # for edge in dcp.get_edges():
     #     dcp_label = dcp.get_edge_data(edge)
     
+    # TODO guarded DCP transformation
+    
+    for edge, label in dcp_edge_data.items():
+        dcp.set_edge_data(edge, label)
+    
     return dcp, stable_norm_set
 
 
-
-
-@DCPConstructionWatch(watch=True)
 def dcp_to_guareded_dcp(dcp: DCP) -> DCP:
     """ Transform regular dcp to DCP over natural numbers 
         
@@ -162,10 +170,13 @@ def dcp_to_guareded_dcp(dcp: DCP) -> DCP:
 
 @DCPConstructionWatch(watch=True)
 def build_dcp(lts: LTS) -> DCP:
+    analysis_logger.info("DCP Construction - []")
     dcp = DCP()
-    lts_to_dcp(lts, dcp)
-    dcp, norms = infer_dcp_labels(lts, dcp)
+    lts_to_dcp(lts, dcp) # mapping graph strucuture of lts to dcp
+    dcp, norms = infer_dcp_labels(lts, dcp) # inferring DCP transitions
+    
+    # dcp = dcp_to_guareded_dcp(dcp)
 
-    # #dcp = dcp_to_guareded_dcp(dcp)
+    analysis_logger.info("DCP Construction - [OK]")
     
     return dcp, norms
