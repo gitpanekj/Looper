@@ -97,6 +97,38 @@ struct TransitionExecutionContext
         // unknow
         return Expression::create_variable("#UNKNOWN#");
     }
+
+    std::vector<LTSTransitionAssignment>& determine_program_state_change(std::vector<LTSTransitionAssignment>& statements)
+    {
+        std::unordered_map<std::string, std::shared_ptr<Expression>> state;
+        for (const auto& [lhs, rhs] : statements)
+        {
+            // Check whether all the variables are tracked in the state
+            // set a=<expr> if a is not tracked
+            // add a=a' for each untracked variable in RHS
+            if (state.find(lhs) == state.end())
+            {
+                state[lhs] = rhs;
+            }
+
+            for (const auto var : rhs->get_variable_names())
+            {
+                if (state.find(lhs) == state.end())
+                {
+                    state[lhs] = Expression::create_variable(var);
+                }
+            }
+
+            // Evaluate RHS over current program state and update program state after assignment to LHS
+            
+
+        }
+
+        // Omit all the predicates of form a = a' (variable value does not chage)
+    }
+
+
+    
 };
 
 #endif

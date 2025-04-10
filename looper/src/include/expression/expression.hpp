@@ -43,6 +43,7 @@ public:
         expr_ast->get_variable_names(names);
         return names;
     }
+    void rename_variable(std::string from, std::string to){expr_ast->rename_variable(from, to);}
 
     /********* Overloaded operators *********/
     friend std::shared_ptr<Expression> operator-(const  std::shared_ptr<Expression> &exp);

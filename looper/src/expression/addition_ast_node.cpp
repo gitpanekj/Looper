@@ -141,7 +141,7 @@ std::shared_ptr<ASTNodeBase> ASTAdditionNode::expand()
     }
     for (const auto &term : new_terms)
     {
-        variable_part.insert(std::pair{term->to_hash(), term});
+        process_operand(term);
     }
 
     if (get_variable_terms().size() == 0)
