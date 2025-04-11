@@ -29,6 +29,7 @@ def cost_bounds(dcp, local_bound_mapping) -> Expression | None:
             total_bound = None
             break
         
+        analysis_logger.log(f"\tEdgeCost({back_edge}) = {tb}")
         total_bound += tb
 
     analysis_logger.log(f"\t[{'OK' if total_bound else 'FAILED':^6}] Cost = {total_bound}")

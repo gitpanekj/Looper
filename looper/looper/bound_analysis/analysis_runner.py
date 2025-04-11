@@ -14,7 +14,7 @@ from .cost_bounds import cost_bounds
 from .local_bounds import construct_local_bound_mapping
 
 CLANG: Path = Path("/home/panekj/llvm-install/bin/clang")
-CLANG_ARGS: str = "-Xclang -disable-O0-optnone -fno-discard-value-names"
+CLANG_ARGS: str = "-O0 -g -Xclang -disable-O0-optnone -fno-discard-value-names"
 
 
 class CompilationFailedException(Exception):
@@ -38,8 +38,8 @@ def compile(filename) -> LLVMIRProcessor:
     status = os.system(f"{CLANG} {CLANG_ARGS} -emit-llvm -c {filename} -o llvm_ir.bc")
     if status:
         raise CompilationFailedException()
-    #os.system(f"{CLANG} {CLANG_ARGS} -S -emit-llvm -c {filename} -o llvm_ir.ll")
-    #os.system("opt -S -passes='dot-cfg' llvm_ir.ll -disable-output")
+    os.system(f"{CLANG} {CLANG_ARGS} -S -emit-llvm -c {filename} -o llvm_ir.ll")
+    os.system("opt -S -passes='dot-cfg' llvm_ir.ll -disable-output")
         
     m = LLVMIRProcessor()
     rv = m.load_module("llvm_ir.bc")
@@ -59,6 +59,14 @@ def analyze_function(compiled_unit, function_name) -> FunctionAnalysisResult:
     # Construct DCP
     dcp, norms = build_dcp(lts)
     
+    if Configuration['graphs']:
+        analysis_logger.save_in_directory('lts.dot', lts.convert_to_dot())
+        analysis_logger.save_in_directory('dcp.dot', dcp.convert_to_dot())
+    
+    
+    FunctionAnalysisResult(function_name, "DCP TEST", "", (perf_counter_ns() - start)/1000_000)
+    
+    
     # Construct Local Bound Mapping
     local_bound_mapping = construct_local_bound_mapping(dcp, norms)
     if len(local_bound_mapping) < len(dcp.get_edges()):
@@ -67,9 +75,7 @@ def analyze_function(compiled_unit, function_name) -> FunctionAnalysisResult:
     # Compute Total Bounds
     bound = cost_bounds(dcp, local_bound_mapping)
     
-    if Configuration['graphs']:
-        analysis_logger.save_in_directory('lts.dot', lts.convert_to_dot())
-        analysis_logger.save_in_directory('dcp.dot', dcp.convert_to_dot())
+
     
     return FunctionAnalysisResult(function_name, str(bound) if bound else "Top", "", (perf_counter_ns() - start)/1000_000)
     

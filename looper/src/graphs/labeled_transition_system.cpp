@@ -15,11 +15,11 @@ namespace graphs
         n_params++;
     }
 
-    void LabeledTransitionSystem::add_parameters(std::vector<std::pair<std::string, std::string>> parameters)
+    void LabeledTransitionSystem::add_parameters(std::vector<std::pair<std::string, std::string>> params)
     {
-        for (auto param : parameters)
+        for (auto param : params)
         {
-            parameters.push_back({param.first, param.second});
+            parameters.push_back(param);
             n_params++;
         }
     }

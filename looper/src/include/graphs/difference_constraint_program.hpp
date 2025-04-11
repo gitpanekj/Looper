@@ -16,7 +16,9 @@ namespace graphs {
         int start_location;
         int end_location;
         std::unordered_set<int> back_edges;    
-        std::unordered_set<int> loop_heads;    
+        std::unordered_set<int> loop_heads;
+
+        std::vector<std::pair<std::string, std::string>> parameters;
     public:
       
       // Getters
@@ -24,6 +26,7 @@ namespace graphs {
       int get_end_location() const {return end_location;}
       const std::unordered_set<int> get_back_edges() const {return back_edges;}
       const std::unordered_set<int> get_loop_heads() const {return loop_heads;}
+      std::vector<std::pair<std::string, std::string>> get_parameters() const { return parameters;}
       bool is_loop_head(int vertex_id) const;
       bool is_back_edge(int edge_id) const;
 

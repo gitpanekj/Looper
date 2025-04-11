@@ -5,6 +5,9 @@
 #include <set>
 
 #include "llvm/IR/Function.h" // Function
+#include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/DebugLoc.h"
+#include "llvm/IR/DebugInfoMetadata.h"
 
 #include "lts_constructor/cfg_utils.hpp"        // getFunctionName, getFunctionReturnType, getFunctionParameters
 #include "graphs/labeled_transition_system.hpp" // LabeledTransitionSystem
@@ -94,8 +97,6 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
             } catch(const InstructionNotImplemented &e) 
             { } // TODO: logging
         }
-            
-
 
         if (!basic_block_type.is(BasicBlockType::Property::Intermediary)){
             // Generate new edge and location
@@ -166,3 +167,5 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
     }
     return _lts;
 }
+
+

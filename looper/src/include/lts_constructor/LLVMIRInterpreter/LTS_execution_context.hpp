@@ -51,10 +51,11 @@ struct TransitionExecutionContext
         if (pending_condition.condition.size() > 0)
         {
             transition_label = LTSTransitionLabel(pending_condition, state_change);
+            transition_label.true_branch = pending_condition.true_branch;
         }
         else
         {
-            transition_label = LTSTransitionLabel(state_change);
+            transition_label = LTSTransitionLabel(LTSTransitionCondition(), state_change);
         }
         clear();
         return transition_label;

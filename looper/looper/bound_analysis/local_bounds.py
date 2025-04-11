@@ -2,6 +2,7 @@ from .analysis_profiler import BoundAnalysisWatch
 from looper.utils import analysis_logger
 from expression import Expression
 from looper.utils import constants
+from collections import defaultdict
 
 # Types
 type EdgeId = int
@@ -13,6 +14,7 @@ def construct_local_bound_mapping(dcp, norms) -> LocalBounds:
     analysis_logger.info("Local Bound Assignemnt")
     
     local_bound_mapping : LocalBounds = {}
+    bound_edge_list = defaultdict(list)
     
     edges = dcp.get_edges()
     unassigned_edges = set(dcp.get_edges())
@@ -43,6 +45,7 @@ def construct_local_bound_mapping(dcp, norms) -> LocalBounds:
                 str(constraint.y) == str(norm) and \
                 constraint.c < constants.ZERO:
                     local_bound_mapping[edge_id] = norm
+                    bound_edge_list[str(norm)].append(edge_id)
                     unassigned_edges.remove(edge_id)
                     assigned_loop_edges.add(edge_id)
             
@@ -52,19 +55,36 @@ def construct_local_bound_mapping(dcp, norms) -> LocalBounds:
             if local_bound_mapping.get(edge_id, None):
                 break
             
-
     # Local Bound Propagation
     if len(unassigned_edges) != 0: 
         
-        edges_in_an_scc = {edge_id for edge_id in dcp.get_edges() if sccs[dcp.get_edge_nodes(edge_id)[0]] == sccs[dcp.get_edge_nodes(edge_id)[1]]}
-        for edge_id in assigned_loop_edges:
-            dcp.mark_as_erased(edge_id)
+        # for zeta(bound)
+        for bound_key, edge_list in bound_edge_list.items():
+            bound = local_bound_mapping[edge_list[0]]
+            
+            # Compute SCCs
+            edges_in_an_scc = {edge_id for edge_id in dcp.get_edges() if sccs[dcp.get_edge_nodes(edge_id)[0]] == sccs[dcp.get_edge_nodes(edge_id)[1]]}
+            
+            # E' = E \ zeta(bound)
+            for edge in edge_list:
+                dcp.mark_as_erased(edge)
+            
+            # Compute SCCs
             _sccs = dcp.sccs()
             _edges_in_an_scc = {edge_id for edge_id in dcp.get_edges() if _sccs[dcp.get_edge_nodes(edge_id)[0]] == _sccs[dcp.get_edge_nodes(edge_id)[1]]}
-            for _edge_id in edges_in_an_scc - _edges_in_an_scc:
-                local_bound_mapping[_edge_id] = local_bound_mapping[edge_id]
-            dcp.unmark_as_erased(edge_id)
             
+            # Edges which are not in SCCs after removal of zeta(bound)
+            for _edge_id in edges_in_an_scc - _edges_in_an_scc:
+                # Assign bound if not already assigned
+                _bound = local_bound_mapping.get(_edge_id, None)
+                if not isinstance(_bound, Expression):
+                    unassigned_edges.remove(_edge_id)
+                    local_bound_mapping[_edge_id] = bound
+            
+            # Revert edge removal
+            for edge in edge_list:
+                dcp.unmark_as_erased(edge)
+
             if len(unassigned_edges) == 0:
                 break
 

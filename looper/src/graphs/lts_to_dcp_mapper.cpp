@@ -13,6 +13,7 @@ namespace graphs
         dcp.end_location = lts.get_end_location();
         dcp.back_edges = lts.get_back_edges();
         dcp.loop_heads = lts.get_loop_heads();
+        dcp.parameters = lts.get_parameters();
 
         // DeepCopy
 

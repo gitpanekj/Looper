@@ -52,7 +52,6 @@ LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS(LTSLabelBuilder, TransitionExecutionCon
 
     // Compare
     INSTRUCTION_HANDLER(ICmp){
-        
         std::shared_ptr<Expression> op1 = ctx.get_operand( inst->getOperand(0));
         std::shared_ptr<Expression> op2 = ctx.get_operand( inst->getOperand(1));
         std::string store_access_path = inst->getName().str();
@@ -63,12 +62,12 @@ LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS(LTSLabelBuilder, TransitionExecutionCon
                 ctx.predicate_cache[store_access_path] = std::make_shared<Equal>(op1, op2);
                 break;
             case llvm::ICmpInst::Predicate::ICMP_NE:
-            ctx.predicate_cache[store_access_path] = std::make_shared<NotEqual>(op1, op2);
-            break;
+                ctx.predicate_cache[store_access_path] = std::make_shared<NotEqual>(op1, op2);
+                break;
             case llvm::ICmpInst::Predicate::ICMP_SGE:
             case llvm::ICmpInst::Predicate::ICMP_UGE:
-            ctx.predicate_cache[store_access_path] = std::make_shared<GreaterOrEqual>(op1, op2);
-            break;
+                ctx.predicate_cache[store_access_path] = std::make_shared<GreaterOrEqual>(op1, op2);
+                break;
             case llvm::ICmpInst::Predicate::ICMP_UGT:
             case llvm::ICmpInst::Predicate::ICMP_SGT:
                 ctx.predicate_cache[store_access_path] = std::make_shared<Greater>(op1, op2);
@@ -92,7 +91,6 @@ LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS(LTSLabelBuilder, TransitionExecutionCon
         }
     
         std::shared_ptr<Predicate> condition = ctx.predicate_cache.find(br->getCondition()->getName().str())->second;
-    
         std::string true_branch = br->getSuccessor(0)->getName().str();
         std::string false_branch = br->getSuccessor(1)->getName().str();
     

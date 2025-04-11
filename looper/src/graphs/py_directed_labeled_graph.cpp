@@ -31,31 +31,39 @@ using namespace graphs;
 // };
 
 
-template<typename NodeDataType, typename VertexDataType>
+template<typename VertexDataType, typename EdgeDataType>
 void register_dlg(py::module &m, const std::string& name){
      // Directed Labeled Graph
-     py::class_<DirectedLabeledGraph<NodeDataType, VertexDataType>>(m, name.c_str())
+     py::class_<DirectedLabeledGraph<VertexDataType, EdgeDataType>>(m, name.c_str())
      .def(py::init<>())
-     .def("add_node", static_cast<int (DirectedLabeledGraph<NodeDataType, VertexDataType>::*)()>(&DirectedLabeledGraph<NodeDataType, VertexDataType>::add_vertex))
-     .def("add_node", static_cast<int (DirectedLabeledGraph<NodeDataType, VertexDataType>::*)(NodeDataType)>(&DirectedLabeledGraph<NodeDataType, VertexDataType>::add_vertex))
-     .def("delete_node", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::delete_vertex))
-     .def("set_node_data", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::set_vertex_data))
-     .def("clear_node_data", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::clear_vertex_data))
-     .def("get_node_data", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::get_vertex_data))
-     .def("get_edges_between", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::get_edges_between))
-     .def("add_edge", static_cast<int (DirectedLabeledGraph<NodeDataType, VertexDataType>::*)(int, int)>(&DirectedLabeledGraph<NodeDataType, VertexDataType>::add_edge))
-     .def("add_edge", static_cast<int (DirectedLabeledGraph<NodeDataType, VertexDataType>::*)(int, int, VertexDataType)>(&DirectedLabeledGraph<NodeDataType, VertexDataType>::add_edge))
-     .def("delete_edge", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::delete_edge))
-     .def("set_edge_data", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::set_edge_data))
-     .def("clear_edge_data", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::clear_edge_data))
-     .def("get_edge_data", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::get_edge_data))
-     .def("get_edge_nodes", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::get_edge_nodes))
-     .def("convert_to_dot", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::convert_to_dot))
-     .def("get_edges", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::get_edges))
-     .def("get_nodes", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::get_nodes))
-     .def("mark_as_erased", &DirectedLabeledGraph<NodeDataType, VertexDataType>::mark_as_erased)
-     .def("unmark_as_erased", &DirectedLabeledGraph<NodeDataType, VertexDataType>::unmark_as_erased)
-     .def("sccs", (&DirectedLabeledGraph<NodeDataType, VertexDataType>::strongly_connected_components));
+     .def("add_node", static_cast<int (DirectedLabeledGraph<VertexDataType, EdgeDataType>::*)()>(&DirectedLabeledGraph<VertexDataType, EdgeDataType>::add_vertex))
+     .def("add_node", static_cast<int (DirectedLabeledGraph<VertexDataType, EdgeDataType>::*)(VertexDataType)>(&DirectedLabeledGraph<VertexDataType, EdgeDataType>::add_vertex))
+     .def("delete_node", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::delete_vertex))
+     .def("set_node_data", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::set_vertex_data))
+     .def("clear_node_data", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::clear_vertex_data))
+     .def("get_node_data", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::get_vertex_data))
+     .def("get_edges_between", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::get_edges_between))
+     .def("add_edge", static_cast<int (DirectedLabeledGraph<VertexDataType, EdgeDataType>::*)(int, int)>(&DirectedLabeledGraph<VertexDataType, EdgeDataType>::add_edge))
+     .def("add_edge", static_cast<int (DirectedLabeledGraph<VertexDataType, EdgeDataType>::*)(int, int, EdgeDataType)>(&DirectedLabeledGraph<VertexDataType, EdgeDataType>::add_edge))
+     .def("delete_edge", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::delete_edge))
+     .def("set_edge_data", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::set_edge_data))
+     .def("clear_edge_data", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::clear_edge_data))
+     .def("get_edge_data", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::get_edge_data))
+     .def("get_edge_nodes", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::get_edge_nodes))
+     .def("convert_to_dot", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::convert_to_dot))
+     .def("get_edges", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::get_edges))
+     .def("get_nodes", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::get_nodes))
+     .def("mark_as_erased", &DirectedLabeledGraph<VertexDataType, EdgeDataType>::mark_as_erased)
+     .def("unmark_as_erased", &DirectedLabeledGraph<VertexDataType, EdgeDataType>::unmark_as_erased)
+     .def("sccs", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::strongly_connected_components))
+     .def("get_ingoing_edges", [](const DirectedLabeledGraph<VertexDataType, EdgeDataType>& graph, int dst) {
+        return py::cast(graph.get_ingoing_edges(dst));
+    })
+    .def("get_outgoing_edges", [](const DirectedLabeledGraph<VertexDataType, EdgeDataType>& graph, int src) {
+        return py::cast(graph.get_outgoing_edges(src));
+    });
+     
+     
 }
 
 PYBIND11_MODULE(graphs, m)
@@ -88,7 +96,7 @@ PYBIND11_MODULE(graphs, m)
         .def("__repr__", &LTSTransitionLabel::to_string); // Bind the toStr method
 
     py::class_<DifferenceConstraint>(m, "DifferenceConstraint")
-        .def(py::init<std::shared_ptr<Expression>, std::shared_ptr<Expression>, std::shared_ptr<Expression>, bool>())
+        .def(py::init<std::shared_ptr<Expression>, std::shared_ptr<Expression>, std::shared_ptr<Expression>>())
         .def("__repr__", &DifferenceConstraint::to_string)
         .def_readwrite("x", &DifferenceConstraint::x)
         .def_readwrite("y", &DifferenceConstraint::y)
@@ -98,6 +106,8 @@ PYBIND11_MODULE(graphs, m)
         .def(py::init<>())
         .def("add_dc", &DCPTransitionLabel::add_dc)
         .def("add_guard", &DCPTransitionLabel::add_guard)
+        .def("is_in_guards", &DCPTransitionLabel::is_in_guards)
+        .def_readwrite("true_branch", &DCPTransitionLabel::true_branch)
         .def_readwrite("constraints", &DCPTransitionLabel::constraints)
         .def_readwrite("guards", &DCPTransitionLabel::guards);
 
@@ -126,7 +136,11 @@ PYBIND11_MODULE(graphs, m)
 
     py::class_<DifferenceConstraintProgram, DirectedLabeledGraph<std::string, DCPTransitionLabel>>(m, "DifferenceConstraintProgram")
         .def(py::init<>())
-        .def("get_back_edges", &DifferenceConstraintProgram::get_back_edges);
+        .def("get_parameters", &DifferenceConstraintProgram::get_parameters)
+        .def("get_back_edges", &DifferenceConstraintProgram::get_back_edges)
+        .def("is_loop_head", &DifferenceConstraintProgram::is_loop_head)
+        .def("is_back_edge", &DifferenceConstraintProgram::is_back_edge)
+        .def("convert_to_dot", (&DifferenceConstraintProgram::convert_to_dot));
 
     m.def("lts_to_dcp", &lts_to_dcp_mapper);
 }

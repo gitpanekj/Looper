@@ -11,14 +11,12 @@
 
 
 struct DifferenceConstraint {
-    bool guarded;
     std::shared_ptr<Expression> x,y,c; //< x <= y + c where c is constant and x,y are expression over program variables
 
-    DifferenceConstraint() : guarded(false), x(nullptr), y(nullptr), c(nullptr) {}
+    DifferenceConstraint() : x(nullptr), y(nullptr), c(nullptr) {}
     DifferenceConstraint(std::shared_ptr<Expression> _x,
                          std::shared_ptr<Expression> _y,
-                         std::shared_ptr<Expression> _c,
-                         bool _guarded) : x(_x), y(_y), c(_c), guarded(_guarded) {}
+                         std::shared_ptr<Expression> _c) : x(_x), y(_y), c(_c) {}
 
     std::string to_string() const
     {
@@ -36,6 +34,7 @@ struct DifferenceConstraint {
 
 
 struct DCPTransitionLabel {
+    bool true_branch;
     std::unordered_map<std::string, std::shared_ptr<Expression>> guards;
     std::unordered_map<std::string, DifferenceConstraint> constraints;
 
@@ -61,6 +60,10 @@ struct DCPTransitionLabel {
 
     void add_guard(std::shared_ptr<Expression> guard){
         guards[guard->to_string()] =  guard;
+    }
+
+    bool is_in_guards(std::shared_ptr<Expression> guard){
+        return guards.find(guard->to_string()) != guards.end();
     }
 };
 

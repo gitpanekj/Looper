@@ -90,6 +90,7 @@ struct LTSTransitionCondition
  */
 struct LTSTransitionLabel
 {
+    bool true_branch = false;
     LTSTransitionCondition condition;                 //< transition condition in DNF
     std::vector<LTSTransitionAssignment> assignments; //< vector of transition assignments which change a program state
 
