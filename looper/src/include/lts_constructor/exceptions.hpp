@@ -62,3 +62,16 @@ public:
         return message;
     }
 };
+
+class InvalidatedValue : public std::exception
+{
+private:
+    char *message;
+
+public:
+InvalidatedValue(char *msg) : message(msg) {}
+    char *what()
+    {
+        return message;
+    }
+};

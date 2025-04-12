@@ -90,12 +90,25 @@ LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS(LTSLabelBuilder, TransitionExecutionCon
             return;
         }
     
-        std::shared_ptr<Predicate> condition = ctx.predicate_cache.find(br->getCondition()->getName().str())->second;
+        std::shared_ptr<Predicate> condition_predicate;
+        // if the condition contains invalidated variales prdoce stub conditinos
+        // to let the analysis flow
+        std::string condition = br->getCondition()->getName().str();
+        if (ctx.invalidated_variables.find(condition) != ctx.invalidated_variables.end() ||
+            ctx.predicate_cache.find(condition) == ctx.predicate_cache.end()) // this should not be possible
+        {
+            condition_predicate = std::make_shared<Equal>(Expression::create_variable("#INVALID"), Expression::create_variable("#INVALID"));
+        }
+        else
+        {
+            condition_predicate = ctx.predicate_cache.find(br->getCondition()->getName().str())->second;
+        }
+
         std::string true_branch = br->getSuccessor(0)->getName().str();
         std::string false_branch = br->getSuccessor(1)->getName().str();
     
-        ctx.block_name_to_predicate[true_branch] = {condition, true};
-        ctx.block_name_to_predicate[false_branch] = {condition->negate(), false};
+        ctx.block_name_to_predicate[true_branch] = {condition_predicate, true};
+        ctx.block_name_to_predicate[false_branch] = {condition_predicate->negate(), false};
     }
     //IMPLEMENTS_INSTRUCTION(FCmp);
 
@@ -103,16 +116,38 @@ LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS(LTSLabelBuilder, TransitionExecutionCon
     // INSTRUCTION_HANDLER(Call){}
 
     // Memmory
-    //IMPLEMENTS_INSTRUCTION(Alloc, LabelType);
+    INSTRUCTION_HANDLER(Alloca){
+        // NOTE: this instruciton has not effect on the transition labeld
+        // If this handler was not added %var = alloca <type>, ... would raise exception
+        // and %var would be invalidated in the program.
+    }
     INSTRUCTION_HANDLER(Load){
         std::string load_access_path = inst->getNameOrAsOperand();
-        std::shared_ptr<Expression> loaded_value = ctx.get_operand( inst->getOperand(0));
-        ctx.expression_cache[load_access_path] = loaded_value;
+        if (ctx.invalidated_variables.find(load_access_path) != ctx.invalidated_variables.end()){
+            throw InvalidatedValue("Invalid operand");
+        }
+
+        try{
+            std::shared_ptr<Expression> loaded_value = ctx.get_operand(inst->getOperand(0));
+            ctx.expression_cache[load_access_path] = loaded_value;
+        }
+        catch (InvalidatedValue&e){ // Invalidate load access path
+            ctx.invalidated_variables.insert(load_access_path);
+        }
     }
     INSTRUCTION_HANDLER(Store){
         std::string store_access_path = inst->getOperand(1)->getNameOrAsOperand();
-        std::shared_ptr<Expression> stored_value = ctx.get_operand( inst->getOperand(0));
-        ctx.statement_batch.push_back(LTSTransitionAssignment(store_access_path, stored_value));
-        //ctx.expression_cache[store_access_path] = stored_value;
+        if (ctx.invalidated_variables.find(store_access_path) != ctx.invalidated_variables.end()){
+            throw InvalidatedValue("Invalid operand");
+        }
+
+        try {
+            std::shared_ptr<Expression> stored_value = ctx.get_operand(inst->getOperand(0));
+            ctx.statement_batch.push_back(LTSTransitionAssignment(store_access_path, stored_value));
+            //ctx.expression_cache[store_access_path] = stored_value;
+        }
+        catch (InvalidatedValue&e){ // Invalidate store acess path
+            ctx.invalidated_variables.insert(store_access_path);
+        }
     }
 LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS_END

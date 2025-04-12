@@ -2,12 +2,14 @@
 #define LTS_EXECUTION_CONTEXT
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <memory>
 
 #include "expression/expression.hpp"
 #include "expression/predicate.hpp"
 #include "graphs/lts_labels.hpp"
+#include "lts_constructor/exceptions.hpp"
 
 #include "llvm/IR/Value.h"
 #include "llvm/IR/Constants.h"
@@ -20,6 +22,8 @@ struct TransitionExecutionContext
     std::unordered_map<std::string, std::tuple<std::shared_ptr<Predicate>, bool>> block_name_to_predicate; //< mapping of the block names which are destination of jump instruction to predicate
     std::vector<LTSTransitionAssignment> statement_batch;                                                  //< vector of assignments which label an LTS edge
     LTSTransitionCondition pending_condition;                                                              //< condition labeling the next edge to be created
+
+    std::unordered_set<std::string> invalidated_variables;  //< Set of variables whose value cannot be determined due to unsupported instruction
 
     void clear()
     {
@@ -63,11 +67,13 @@ struct TransitionExecutionContext
 
     std::shared_ptr<Expression> get_operand(llvm::Value *operand)
     {
-
         // named variable (original or generated)
         if (operand->hasName())
         {
             std::string var_name = operand->getName().str();
+            if (invalidated_variables.find(var_name) != invalidated_variables.end()){
+                throw InvalidatedValue("Invalid operand");
+            }
             auto it = expression_cache.find(var_name);
             if (it != expression_cache.end())
             {
@@ -81,6 +87,9 @@ struct TransitionExecutionContext
         if (llvm::isa<llvm::Instruction>(operand))
         {
             std::string temp_var_name = operand->getNameOrAsOperand();
+            if (invalidated_variables.find(temp_var_name) != invalidated_variables.end()){
+                throw InvalidatedValue("Invalid operand");
+            }
             auto it = expression_cache.find(temp_var_name);
             if (it != expression_cache.end())
             {
