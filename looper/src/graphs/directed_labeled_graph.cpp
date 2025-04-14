@@ -18,9 +18,11 @@
 #include <functional>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <stack>
 #include <tuple>
 #include <optional>
+#include <utility>
 
 namespace graphs
 {
@@ -186,13 +188,13 @@ namespace graphs
         auto it = outgoing_edges.find(src);
         if (it == outgoing_edges.end()) throw std::invalid_argument("Given vertex_id " + std::to_string(src) + " does not identify a vertex.");
 
-        std::vector<int> successors;
+        std::unordered_set<int> successors;
         for (const auto &edge : outgoing_edges.at(src))
         {
             if (erased_edges.find(edge.id) != erased_edges.end()) continue;
-            successors.push_back(edge.to);
+            successors.insert(edge.to);
         }
-        return successors;
+        return std::vector<int>(successors.begin(), successors.end());
     }
 
     template <typename VertexDataType, typename EdgeDataType>
@@ -201,13 +203,13 @@ namespace graphs
         auto it = outgoing_edges.find(dst);
         if (it == outgoing_edges.end()) throw std::invalid_argument("Given vertex_id " + std::to_string(dst) + " does not identify a vertex.");
 
-        std::vector<int> predecessors;
+        std::unordered_set<int> predecessors;
         for (const auto &edge : ingoing_edges.at(dst))
         {
             if (erased_edges.find(edge.id) != erased_edges.end()) continue;
-            predecessors.push_back(edge.from);
+            predecessors.insert(edge.from);
         }
-        return predecessors;
+        return std::vector<int>(predecessors.begin(), predecessors.end());
     }
     /* End of node operations */
 
@@ -324,7 +326,7 @@ namespace graphs
         dotStream << "\t// Node definitions " << std::endl;
         for (const auto &node : outgoing_edges)
         {
-            dotStream << "\t" << node.first << " [label=\"" << vertices_data.at(node.first) << "\"];" << std::endl;
+            dotStream << "\t" << node.first << " [label=\"" << node.first << "\"];" << std::endl;
         }
 
         dotStream << "\n";
@@ -335,12 +337,12 @@ namespace graphs
             const std::list<OutgoingEdge> &edges_from_src = node.second;
             for (const auto &edge : edges_from_src)
             {
-                try {
-                    label = edges_data.at(edge.id).to_string();
-                } catch (...){
-                    label = "";
-                }
-                dotStream << "\t" << src << " -> " << edge.to << " [label=\"" << edge.id << " : " << label << "\"]" << ";" << std::endl;
+                // try {
+                //     label = edges_data.at(edge.id).to_string();
+                // } catch (...){
+                //     label = "";
+                // }
+                dotStream << "\t" << src << " -> " << edge.to <<   ";" << std::endl; // " [label=\"" << edge.id << " : " << label << "\"]" << ";" << std::endl;
             }
         }
         dotStream << "}\n"
@@ -461,3 +463,4 @@ namespace graphs
 }
 template class graphs::DirectedLabeledGraph<std::string, LTSTransitionLabel>;
 template class graphs::DirectedLabeledGraph<std::string, DCPTransitionLabel>;
+template class graphs::DirectedLabeledGraph<std::pair<int, std::string>, std::string>;

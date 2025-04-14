@@ -12,6 +12,8 @@ from graphs import (DifferenceConstraintProgram as DCP,
                     LTSTransitionCondition,
                     lts_to_dcp)
 from looper.utils import analysis_logger
+from looper.config import Configuration
+from .variable_renaming import flow_sensitive_transformation
 
 DCPConstructionWatch = ProfilingManager.watch('dcp_construction')
 
@@ -47,11 +49,25 @@ def initial_set_of_norms(lts: LTS) -> set[Norm]:
             # infer the norm from the condition
             # x - y for x > y
             # x - y + 1 for x >= y
-            n = condition.get_norm()
-            if len(n[0]):
-                norms.append(n)
+            new_norm = condition.get_norm()
+            if len(new_norm[0]) == 0:
+                continue
+            new_norm = new_norm[0][0]
+            norms.append(new_norm)
+                
+            # # Find a norm such that is only differs in the constant term from the resulting norm
+            # for stable_norm in norms:
+            #     # Two norms differ only in constant part -> e_1 - e_2 = CONST
+            #     diff = new_norm - stable_norm
+            #     if diff.is_constant():
+            #         # A norm differs only in constant part
+            #         # Do not add the norm to the intial set of norms
+            #         break
+            # else: # No norm such that e_1 - e_2 = CONST was found, add norm to the initial set of norms
+            #     norms.append(new_norm)
+                    
     # NOTE: unpack norms for now, disabling compound norms
-    norms = [norm[0][0] for norm in norms]
+    # norms = [norm[0][0] for norm in norms]
     
     return norms
             
@@ -287,7 +303,10 @@ def build_dcp(lts: LTS) -> DCP:
     lts_to_dcp(lts, dcp) # mapping graph strucuture of lts to dcp
     dcp, norms = infer_dcp_labels(lts, dcp) # inferring DCP transitions
     
-    # dcp = dcp_to_guareded_dcp(dcp)
+    if Configuration.config['analysis']['vfg']:
+        variable_names = set([str(norm) for norm in norms])
+        dcp, norms = flow_sensitive_transformation(dcp, variable_names)
+    
     analysis_logger.info("DCP Construction - [OK]")
     
     return dcp, norms

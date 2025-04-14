@@ -1,11 +1,13 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <string>
+#include <utility>
 #include "graphs/directed_labeled_graph.hpp"
 #include "graphs/labeled_transition_system.hpp"
 #include "graphs/lts_labels.hpp"
 #include "graphs/difference_constraint_program.hpp"
 #include "graphs/dcp_labels.hpp"
+#include "graphs/variable_flow_graph.hpp"
 #include "graphs/lts_to_dcp_mapper.hpp"
 #include "expression/predicate.hpp"
 #include "expression/expression.hpp"
@@ -56,14 +58,14 @@ void register_dlg(py::module &m, const std::string& name){
      .def("mark_as_erased", &DirectedLabeledGraph<VertexDataType, EdgeDataType>::mark_as_erased)
      .def("unmark_as_erased", &DirectedLabeledGraph<VertexDataType, EdgeDataType>::unmark_as_erased)
      .def("sccs", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::strongly_connected_components))
+     .def("get_successors", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::get_successors))
+     .def("get_predecessors", (&DirectedLabeledGraph<VertexDataType, EdgeDataType>::get_predecessors))
      .def("get_ingoing_edges", [](const DirectedLabeledGraph<VertexDataType, EdgeDataType>& graph, int dst) {
         return py::cast(graph.get_ingoing_edges(dst));
     })
     .def("get_outgoing_edges", [](const DirectedLabeledGraph<VertexDataType, EdgeDataType>& graph, int src) {
         return py::cast(graph.get_outgoing_edges(src));
-    });
-     
-     
+    });    
 }
 
 PYBIND11_MODULE(graphs, m)
@@ -114,6 +116,7 @@ PYBIND11_MODULE(graphs, m)
     // DirectedLabeledGraph
     register_dlg<std::string, LTSTransitionLabel>(m, "LTSBase");
     register_dlg<std::string, DCPTransitionLabel>(m, "DCPBase");
+    register_dlg<std::pair<int, std::string>, std::string>(m, "VFGBase");
 
     // Labeled Transition System
     py::class_<LabeledTransitionSystem, DirectedLabeledGraph<std::string, LTSTransitionLabel>>(m, "LabeledTransitionSystem")
@@ -138,9 +141,18 @@ PYBIND11_MODULE(graphs, m)
         .def(py::init<>())
         .def("get_parameters", &DifferenceConstraintProgram::get_parameters)
         .def("get_back_edges", &DifferenceConstraintProgram::get_back_edges)
+        .def("get_start_location", &DifferenceConstraintProgram::get_start_location)
+        .def("get_end_location", &DifferenceConstraintProgram::get_end_location)
         .def("is_loop_head", &DifferenceConstraintProgram::is_loop_head)
         .def("is_back_edge", &DifferenceConstraintProgram::is_back_edge)
         .def("convert_to_dot", (&DifferenceConstraintProgram::convert_to_dot));
+
+    py::class_<VariableFlowGraph, DirectedLabeledGraph<std::pair<int, std::string>, std::string>>(m, "VariableFlowGraph")
+    .def(py::init<>())
+    .def("add_variable_vertex", &VariableFlowGraph::add_variable_vertex)
+    .def("delete_variable_vertex", &VariableFlowGraph::delete_variable_vertex)
+    .def("find_variable_vertex", &VariableFlowGraph::find_variable_vertex)
+    .def("convert_to_dot", (&VariableFlowGraph::convert_to_dot));
 
     m.def("lts_to_dcp", &lts_to_dcp_mapper);
 }

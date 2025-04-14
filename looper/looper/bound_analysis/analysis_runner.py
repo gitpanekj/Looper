@@ -56,16 +56,17 @@ def analyze_function(compiled_unit, function_name) -> FunctionAnalysisResult:
     except Exception:
         return FunctionAnalysisResult(function_name, "UNKNOWN", "Failed to construct LTS.")
     
+    if Configuration['graphs']:
+        analysis_logger.save_in_directory('lts.dot', lts.convert_to_dot())
+    
     # Construct DCP
     dcp, norms = build_dcp(lts)
     
     if Configuration['graphs']:
-        analysis_logger.save_in_directory('lts.dot', lts.convert_to_dot())
         analysis_logger.save_in_directory('dcp.dot', dcp.convert_to_dot())
     
     
-    FunctionAnalysisResult(function_name, "DCP TEST", "", (perf_counter_ns() - start)/1000_000)
-    
+    #return FunctionAnalysisResult(function_name, "DCP TEST", "", (perf_counter_ns() - start)/1000_000)
     
     # Construct Local Bound Mapping
     local_bound_mapping = construct_local_bound_mapping(dcp, norms)

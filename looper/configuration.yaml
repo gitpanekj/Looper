@@ -1,6 +1,6 @@
 analysis:
-  enable_vfg: false
-  enable_rc: false
+  vfg: false
+  rc: false
 results: '.'
 graphs: false
 logging: true

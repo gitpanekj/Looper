@@ -74,7 +74,7 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
         // Top
         std::tie(location_id, basic_block) = edges_to_process_stack.top();
 
-        std::cout << "Location: " << location_id << "  BasicBlock: " << basic_block->getName().str() << std::endl;
+        //std::cout << "Location: " << location_id << "  BasicBlock: " << basic_block->getName().str() << std::endl;
 
         // Type, visited
         BasicBlockType basic_block_type = getBasicBlockType(basic_block);
@@ -91,7 +91,7 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
         visited_basic_blocks.insert(basic_block);
 
         // Instruction processing
-        std::cout << "Processing instructions to unvisited block" << std::endl;
+        //std::cout << "Processing instructions to unvisited block" << std::endl;
         forming_label.check_target_node_of_jump(basic_block->getName().str());
         for (const auto &inst : *basic_block){
             // Instruction interpretation over the context
@@ -103,7 +103,7 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
                 if (inst.getName().str().size() > 0)
                 {
                     forming_label.invalidated_variables.insert(inst.getName().str());
-                    std::cout << "Unknown Instruciton -- > Invalidating " << inst.getName().str() << std::endl;
+                    //std::cout << "Unknown Instruciton -- > Invalidating " << inst.getName().str() << std::endl;
                 }
             }  catch(const InvalidatedValue &e) 
             {
@@ -111,7 +111,7 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
                 if (inst.getName().str().size() > 0)
                 {
                     forming_label.invalidated_variables.insert(inst.getName().str());
-                    std::cout << "Unknown Operand -- > Invalidating " << inst.getName().str() << std::endl;
+                    //std::cout << "Unknown Operand -- > Invalidating " << inst.getName().str() << std::endl;
                 }
             }
         }
@@ -154,7 +154,7 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
                 int src = location_id;
                 int dst = basic_block_to_location_id[successor];
                 
-                std::cout << "Processing instructions leading to visited block" << std::endl;
+                //std::cout << "Processing instructions leading to visited block" << std::endl;
                 // Processing the state changing instruction which are execuded before jump instruction NOTE:  works for testing example, may need extension in the future
                 // check whether the node is not target of a conditional jump, if so, condition is added to label - NOTE: here covers edge (src, dst) where src=dst
                 forming_label.check_target_node_of_jump(successor->getName().str()); // check whether the node is not target of a conditional jump, if so, condition is added to label
@@ -168,7 +168,7 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
                         if (inst.getName().str().size() > 0)
                         {
                             forming_label.invalidated_variables.insert(inst.getName().str());
-                            std::cout << "Unknown Instruciton -- > Invalidating " << inst.getName().str() << std::endl;
+                            //std::cout << "Unknown Instruciton -- > Invalidating " << inst.getName().str() << std::endl;
                         }
                     }  catch(const InvalidatedValue &e) 
                     {
@@ -176,7 +176,7 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
                         if (inst.getName().str().size() > 0)
                         {
                             forming_label.invalidated_variables.insert(inst.getName().str());
-                            std::cout << "Unknown Operand -- > Invalidating " << inst.getName().str() << std::endl;
+                            //std::cout << "Unknown Operand -- > Invalidating " << inst.getName().str() << std::endl;
                         }
                     }
                 }
