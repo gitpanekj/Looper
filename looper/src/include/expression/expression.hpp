@@ -31,9 +31,12 @@ public:
     static std::shared_ptr<Expression> create_subtraction(std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs);
     static std::shared_ptr<Expression> create_negation(std::shared_ptr<Expression>exp);
     static std::shared_ptr<Expression> create_multiplication(std::shared_ptr<Expression> lhs, std::shared_ptr<Expression> rhs);
+    static std::shared_ptr<Expression> create_max(std::vector<std::shared_ptr<Expression>> terms);
+    static std::shared_ptr<Expression> create_min(std::vector<std::shared_ptr<Expression>> terms);
 
     /********* Expression manipulation *********/
     std::shared_ptr<Expression> copy() { return std::make_shared<Expression>(expr_ast->copy()); }
+    std::shared_ptr<ASTNodeBase> get_ast_copy() { return expr_ast->copy(); }
     void expand();
     void substitute(std::string name, std::shared_ptr<Expression> expr);
     bool is_constant() const { return expr_ast->get_variable_terms().size() == 0; }

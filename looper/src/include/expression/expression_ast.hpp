@@ -27,6 +27,8 @@ enum class ASTNodeType
     // Operations
     Addition,
     Multiplication,
+    Min,
+    Max
 };
 
 /**
@@ -256,6 +258,77 @@ public:
 
 };
 
+
+/**
+ * @brief AST node representing maximum operation.
+ */
+class ASTMaxNode : public ASTNodeBase
+{
+private:
+    std::vector<std::shared_ptr<ASTNodeBase>> terms;
+
+public:
+    ASTMaxNode(std::vector<std::shared_ptr<ASTNodeBase>> terms);
+    std::shared_ptr<ASTNodeBase> copy() override;
+    std::shared_ptr<ASTNodeBase> expand() override;
+    std::shared_ptr<ASTNodeBase> substitute(std::string _name, std::shared_ptr<ASTNodeBase> expr) override;
+
+    /**************  Getters, setters **************/
+    // Constant
+    int get_constant_term() const override { return 0; }
+    void set_constant_term(int _value) override { }
+    void get_variable_names(std::unordered_set<std::string> &names) const override {
+        for (const auto& term : terms)
+        {
+            term->get_variable_names(names);
+        }
+    }
+
+    // Variable
+    std::vector<std::shared_ptr<ASTNodeBase>> get_variable_terms() const override;
+    // Operands
+    std::vector<std::shared_ptr<ASTNodeBase>> get_operands() const override;
+
+    // Repr
+    std::string _to_string() const override;
+    std::string _to_hash() const override;
+};
+
+
+/**
+ * @brief AST node representing minimum operation.
+ */
+class ASTMinNode : public ASTNodeBase
+{
+private:
+    std::vector<std::shared_ptr<ASTNodeBase>> terms;
+
+public:
+    ASTMinNode(std::vector<std::shared_ptr<ASTNodeBase>> terms);
+    std::shared_ptr<ASTNodeBase> copy() override;
+    std::shared_ptr<ASTNodeBase> expand() override;
+    std::shared_ptr<ASTNodeBase> substitute(std::string _name, std::shared_ptr<ASTNodeBase> expr) override;
+
+    /**************  Getters, setters **************/
+    // Constant
+    int get_constant_term() const override { return 0; }
+    void set_constant_term(int _value) override { }
+    void get_variable_names(std::unordered_set<std::string> &names) const override {
+        for (const auto& term : terms)
+        {
+            term->get_variable_names(names);
+        }
+    }
+
+    // Variable
+    std::vector<std::shared_ptr<ASTNodeBase>> get_variable_terms() const override;
+    // Operands
+    std::vector<std::shared_ptr<ASTNodeBase>> get_operands() const override;
+
+    // Repr
+    std::string _to_string() const override;
+    std::string _to_hash() const override;
+};
 
 
 

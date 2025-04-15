@@ -236,6 +236,21 @@ void ASTAdditionNode::process_operand(std::shared_ptr<ASTNodeBase> op)
         }
         break;
     }
+    case ASTNodeType::Max: // Represented as c * min, c * max
+    case ASTNodeType::Min:
+        if (auto it = variable_part.find(op->to_hash()); it != variable_part.end())
+        {
+            std::string key;
+            std::shared_ptr<ASTNodeBase> value;
+            std::tie(key, value) = *it;
+            value->set_constant_term(value->get_constant_term() + 1);
+        }
+        else
+        {
+            std::shared_ptr<ASTNodeBase> new_term = std::make_shared<ASTMultiplicationNode>(std::vector<std::shared_ptr<ASTNodeBase>>({op}));
+            variable_part[new_term->to_hash()] = new_term;
+        }
+        break;
     case ASTNodeType::IntegerConstant:
         set_constant_term(get_constant_term() + op->get_constant_term());
         break;

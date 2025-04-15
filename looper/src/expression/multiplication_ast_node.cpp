@@ -210,6 +210,10 @@ void ASTMultiplicationNode::process_operand(std::shared_ptr<ASTNodeBase> op)
             variable_part.insert(std::pair{op->to_hash(), op});
         }
         break;
+    case ASTNodeType::Max: // Represented as c * min, c * max
+    case ASTNodeType::Min:
+        variable_part.insert(std::pair{op->to_hash(), op});
+        break;
     }
 }
 

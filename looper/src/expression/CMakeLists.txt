@@ -1,4 +1,4 @@
-add_library(expression expression.cpp predicate.cpp multiplication_ast_node.cpp addition_ast_node.cpp)
+add_library(expression expression.cpp predicate.cpp multiplication_ast_node.cpp addition_ast_node.cpp max_ast_node.cpp min_ast_node.cpp)
 target_include_directories(expression PUBLIC ${CMAKE_SOURCE_DIR}/src/include)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/modules/expression)
 pybind11_add_module(PyExpression py_expression.cpp)

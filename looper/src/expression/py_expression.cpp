@@ -19,6 +19,8 @@ PYBIND11_MODULE(expression, m)
         .def_static("create_subtraction", &Expression::create_subtraction)
         .def_static("create_negation", &Expression::create_negation)
         .def_static("create_multiplication", &Expression::create_multiplication)
+        .def_static("create_max", &Expression::create_max)
+        .def_static("create_min", &Expression::create_min)
         // standard methods
         .def("copy", &Expression::copy)
         .def("expand", &Expression::expand)

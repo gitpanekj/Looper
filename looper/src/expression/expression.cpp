@@ -34,6 +34,32 @@ std::shared_ptr<Expression> Expression::create_multiplication(std::shared_ptr<Ex
     return lhs * rhs;
 }
 
+
+std::shared_ptr<Expression> Expression::create_max(std::vector<std::shared_ptr<Expression>> terms)
+{
+    std::vector<std::shared_ptr<ASTNodeBase>> terms_copy;
+    for (const auto& term : terms)
+    {
+        terms_copy.push_back(term->get_ast_copy());
+    }
+    auto max = std::make_shared<ASTMaxNode>(terms_copy);
+    auto ast = std::make_shared<ASTAdditionNode>(std::vector<std::shared_ptr<ASTNodeBase>>({max}));
+    return std::make_shared<Expression>(ast);
+}
+
+std::shared_ptr<Expression> Expression::create_min(std::vector<std::shared_ptr<Expression>> terms)
+{
+    std::vector<std::shared_ptr<ASTNodeBase>> terms_copy;
+    for (const auto& term : terms)
+    {
+        terms_copy.push_back(term->get_ast_copy());
+    }
+    auto max = std::make_shared<ASTMinNode>(terms_copy);
+    auto ast = std::make_shared<ASTAdditionNode>(std::vector<std::shared_ptr<ASTNodeBase>>({max}));
+    return std::make_shared<Expression>(ast);
+}
+
+
 void Expression::expand()
 {
     auto subs_ast = expr_ast->expand();
