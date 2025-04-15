@@ -12,6 +12,7 @@
 #include "graphs/directed_labeled_graph.hpp"
 #include "graphs/lts_labels.hpp"
 #include "graphs/dcp_labels.hpp"
+#include "expression/expression.hpp"
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -23,6 +24,7 @@
 #include <tuple>
 #include <optional>
 #include <utility>
+#include <memory>
 
 namespace graphs
 {
@@ -464,3 +466,4 @@ namespace graphs
 template class graphs::DirectedLabeledGraph<std::string, LTSTransitionLabel>;
 template class graphs::DirectedLabeledGraph<std::string, DCPTransitionLabel>;
 template class graphs::DirectedLabeledGraph<std::pair<int, std::string>, std::string>;
+template class graphs::DirectedLabeledGraph<std::shared_ptr<Expression>, std::pair<int, std::shared_ptr<Expression>>>;

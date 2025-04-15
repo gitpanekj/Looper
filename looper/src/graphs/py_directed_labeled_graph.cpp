@@ -8,6 +8,7 @@
 #include "graphs/difference_constraint_program.hpp"
 #include "graphs/dcp_labels.hpp"
 #include "graphs/variable_flow_graph.hpp"
+#include "graphs/reset_chain_graph.hpp"
 #include "graphs/lts_to_dcp_mapper.hpp"
 #include "expression/predicate.hpp"
 #include "expression/expression.hpp"
@@ -117,6 +118,7 @@ PYBIND11_MODULE(graphs, m)
     register_dlg<std::string, LTSTransitionLabel>(m, "LTSBase");
     register_dlg<std::string, DCPTransitionLabel>(m, "DCPBase");
     register_dlg<std::pair<int, std::string>, std::string>(m, "VFGBase");
+    register_dlg<std::shared_ptr<Expression>, std::pair<int, std::shared_ptr<Expression>>>(m, "RCBase");
 
     // Labeled Transition System
     py::class_<LabeledTransitionSystem, DirectedLabeledGraph<std::string, LTSTransitionLabel>>(m, "LabeledTransitionSystem")
@@ -153,6 +155,13 @@ PYBIND11_MODULE(graphs, m)
     .def("delete_variable_vertex", &VariableFlowGraph::delete_variable_vertex)
     .def("find_variable_vertex", &VariableFlowGraph::find_variable_vertex)
     .def("convert_to_dot", (&VariableFlowGraph::convert_to_dot));
+
+
+    py::class_<ResetChainGraph, DirectedLabeledGraph<std::shared_ptr<Expression>, std::pair<int, std::shared_ptr<Expression>>>>(m, "ResetChainGraph")
+    .def(py::init<>())
+    .def("find_atom_vertex", &ResetChainGraph::find_atom_vertex)
+    .def("add_atom", &ResetChainGraph::add_atom)
+    .def("convert_to_dot", (&ResetChainGraph::convert_to_dot));
 
     m.def("lts_to_dcp", &lts_to_dcp_mapper);
 }

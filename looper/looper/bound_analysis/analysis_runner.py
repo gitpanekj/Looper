@@ -3,6 +3,7 @@ import os
 from time import perf_counter_ns
 from pathlib import Path
 from dataclasses import dataclass
+from pprint import pprint
 
 from lts import LLVMIRProcessor
 
@@ -12,6 +13,7 @@ from looper.utils import analysis_logger
 
 from .cost_bounds import cost_bounds
 from .local_bounds import construct_local_bound_mapping
+from .reset_chains import construct_reset_chain_graph, get_optimal_reset_chains
 
 CLANG: Path = Path("/home/panekj/llvm-install/bin/clang")
 CLANG_ARGS: str = "-O0 -g -Xclang -disable-O0-optnone -fno-discard-value-names"
@@ -65,8 +67,16 @@ def analyze_function(compiled_unit, function_name) -> FunctionAnalysisResult:
     if Configuration['graphs']:
         analysis_logger.save_in_directory('dcp.dot', dcp.convert_to_dot())
     
+    if Configuration.config['analysis']['rc']:
+        variable_names = set([str(norm) for norm in norms])
+        reset_graph = construct_reset_chain_graph(dcp, variable_names)
+        if Configuration['graphs']:
+            analysis_logger.save_in_directory('rc.dot', reset_graph.convert_to_dot())
+        reset_chains = get_optimal_reset_chains(dcp, reset_graph, variable_names)
+        pprint(reset_chains)
+        
     
-    #return FunctionAnalysisResult(function_name, "DCP TEST", "", (perf_counter_ns() - start)/1000_000)
+    return FunctionAnalysisResult(function_name, "RC TEST", "", (perf_counter_ns() - start)/1000_000)
     
     # Construct Local Bound Mapping
     local_bound_mapping = construct_local_bound_mapping(dcp, norms)
