@@ -3,12 +3,45 @@
 #include <memory>
 #include <sstream>
 
+// TODO: advanced comparison of max terms
+// now only constants and axact match of terms is considered
+
 ASTMinNode::ASTMinNode(std::vector<std::shared_ptr<ASTNodeBase>> terms) : ASTNodeBase(ASTNodeType::Min)
 {
-    for (const auto& term : terms)
+    std::shared_ptr<ASTNodeBase> min_const;
+    bool const_present = false;
+    std::unordered_set<std::string> term_names;
+
+    for (int i=0;i<terms.size();i++)
     {
-        this->terms.push_back(term);
+        auto term = terms[i];
+
+        if (term->get_variable_terms().size() == 0) // constant
+        {
+            if (const_present)
+            {
+                if (term->get_constant_term() < min_const->get_constant_term()) min_const = term;
+            }
+            else
+            {
+                const_present = true;
+                min_const = term;
+            }
+        }
+        else if (term_names.find(term->to_string()) == term_names.end()) // no exact match of a variable expression
+        {
+            this->terms.push_back(term);
+            term_names.insert(term->to_string());
+        }
     }
+
+    if (const_present)
+    {
+        this->terms.push_back(min_const);
+    }
+
+    upadte_expression_string();
+    upadte_hash_string();
 }
 
 
@@ -52,8 +85,6 @@ std::vector<std::shared_ptr<ASTNodeBase>> ASTMinNode::get_variable_terms() const
 {
     std::vector<std::shared_ptr<ASTNodeBase>> terms;
 
-    std::string key;
-    std::shared_ptr<ASTNodeBase> value;
     std::unordered_set<std::string> names;
 
     for (const auto& term : this->terms)
@@ -61,7 +92,7 @@ std::vector<std::shared_ptr<ASTNodeBase>> ASTMinNode::get_variable_terms() const
         term->get_variable_names(names);
         if (names.size() == 0) continue; // No variable present in the expression
         names.clear();
-        terms.push_back(value);
+        terms.push_back(term);
     }
 
     return terms; 
@@ -72,11 +103,9 @@ std::vector<std::shared_ptr<ASTNodeBase>> ASTMinNode::get_operands() const
 {
     std::vector<std::shared_ptr<ASTNodeBase>> terms;
 
-    std::string key;
-    std::shared_ptr<ASTNodeBase> value;
     for (const auto &term : this->terms)
     {
-        terms.push_back(value);
+        terms.push_back(term);
     }
 
     return terms;

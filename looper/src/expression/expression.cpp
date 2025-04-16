@@ -1,5 +1,54 @@
 #include "expression/expression.hpp"
 
+std::vector<std::shared_ptr<ASTNodeBase>> try_expand_max_in_max(std::shared_ptr<ASTNodeBase> sum_expr)
+{
+    // c*var where c > 0
+    if (sum_expr->get_variable_terms().size() != 1 || sum_expr->get_variable_terms()[0]->get_type() != ASTNodeType::Multiplication)
+        return std::vector<std::shared_ptr<ASTNodeBase>>();
+    auto mul_term = sum_expr->get_variable_terms()[0];
+
+    if (mul_term->get_variable_terms().size() != 1 || 
+        mul_term->get_variable_terms()[0]->get_type() != ASTNodeType::Max ||
+        mul_term->get_constant_term() <= 0)
+            return std::vector<std::shared_ptr<ASTNodeBase>>();
+
+    // c*max(a,b,c,d)
+    auto max = mul_term->get_variable_terms()[0];
+    auto c = std::make_shared<ASTIntegerConstantNode>(mul_term->get_constant_term());
+    std::vector<std::shared_ptr<ASTNodeBase>> expanded_terms;
+    for (auto term : max->get_operands()){
+        expanded_terms.push_back(std::make_shared<ASTMultiplicationNode>(std::vector<std::shared_ptr<ASTNodeBase>>({term->copy(), c->copy()})));
+    }
+    
+    // c*a + c*b + c*b + c*d
+    return expanded_terms;
+}
+
+std::vector<std::shared_ptr<ASTNodeBase>> try_expand_min_in_min(std::shared_ptr<ASTNodeBase> sum_expr)
+{
+    // c*var where c > 0
+    if (sum_expr->get_variable_terms().size() != 1 || sum_expr->get_variable_terms()[0]->get_type() != ASTNodeType::Multiplication)
+        return std::vector<std::shared_ptr<ASTNodeBase>>();
+    auto mul_term = sum_expr->get_variable_terms()[0];
+
+    if (mul_term->get_variable_terms().size() != 1 || 
+        mul_term->get_variable_terms()[0]->get_type() != ASTNodeType::Min ||
+        mul_term->get_constant_term() <= 0)
+        return std::vector<std::shared_ptr<ASTNodeBase>>();
+
+    // c*min(a,b,c,d)
+    auto min = mul_term->get_variable_terms()[0];
+    auto c = std::make_shared<ASTIntegerConstantNode>(mul_term->get_constant_term());
+    std::vector<std::shared_ptr<ASTNodeBase>> expanded_terms;
+    for (auto term : min->get_operands()){
+        expanded_terms.push_back(std::make_shared<ASTMultiplicationNode>(std::vector<std::shared_ptr<ASTNodeBase>>({term->copy(), c->copy()})));
+    }
+
+    return expanded_terms;
+}
+
+
+
 std::shared_ptr<Expression> Expression::create_constant(int value)
 {
     auto ast = std::make_shared<ASTAdditionNode>(std::vector<std::shared_ptr<ASTNodeBase>>());
@@ -38,11 +87,30 @@ std::shared_ptr<Expression> Expression::create_multiplication(std::shared_ptr<Ex
 std::shared_ptr<Expression> Expression::create_max(std::vector<std::shared_ptr<Expression>> terms)
 {
     std::vector<std::shared_ptr<ASTNodeBase>> terms_copy;
-    for (const auto& term : terms)
+    for (int i = 0; i < terms.size(); i++)
     {
-        terms_copy.push_back(term->get_ast_copy());
+        auto term = terms[i];
+        // If the term is in the form of c*max(a,b) and c > 0
+        // then append c*a, c*b
+        auto ast = term->get_ast_copy();
+        auto expanded_terms = try_expand_max_in_max(ast);
+        if (expanded_terms.size() == 0){
+            terms_copy.push_back(ast);
+            continue;
+        }
+        for (auto expanded_term : expanded_terms)
+        {
+            terms.push_back(std::make_shared<Expression>(expanded_term));
+        }
     }
-    auto max = std::make_shared<ASTMaxNode>(terms_copy);
+
+    std::shared_ptr<ASTNodeBase> max = std::make_shared<ASTMaxNode>(terms_copy);
+    
+    // Reduce to constant
+    if (max->get_operands().size() == 1)
+    {
+        max = max->get_operands()[0];
+    }
     auto ast = std::make_shared<ASTAdditionNode>(std::vector<std::shared_ptr<ASTNodeBase>>({max}));
     return std::make_shared<Expression>(ast);
 }
@@ -50,11 +118,30 @@ std::shared_ptr<Expression> Expression::create_max(std::vector<std::shared_ptr<E
 std::shared_ptr<Expression> Expression::create_min(std::vector<std::shared_ptr<Expression>> terms)
 {
     std::vector<std::shared_ptr<ASTNodeBase>> terms_copy;
-    for (const auto& term : terms)
+    for (int i = 0; i < terms.size(); i++)
     {
-        terms_copy.push_back(term->get_ast_copy());
+        auto term = terms[i];
+        // If the term is in the form of c*max(a,b) and c > 0
+        // then append c*a, c*b
+        auto ast = term->get_ast_copy();
+        auto expanded_terms = try_expand_min_in_min(ast);
+        if (expanded_terms.size() == 0){
+            terms_copy.push_back(ast);
+            continue;
+        }
+        for (auto expanded_term : expanded_terms)
+        {
+            terms.push_back(std::make_shared<Expression>(expanded_term));
+        }
     }
-    auto max = std::make_shared<ASTMinNode>(terms_copy);
+
+    std::shared_ptr<ASTNodeBase> max = std::make_shared<ASTMinNode>(terms_copy);
+    
+    // Reduce to constant
+    if (max->get_operands().size() == 1)
+    {
+        max = max->get_operands()[0];
+    }
     auto ast = std::make_shared<ASTAdditionNode>(std::vector<std::shared_ptr<ASTNodeBase>>({max}));
     return std::make_shared<Expression>(ast);
 }

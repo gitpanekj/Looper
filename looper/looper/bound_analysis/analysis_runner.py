@@ -76,7 +76,7 @@ def analyze_function(compiled_unit, function_name) -> FunctionAnalysisResult:
         pprint(reset_chains)
         
     
-    return FunctionAnalysisResult(function_name, "RC TEST", "", (perf_counter_ns() - start)/1000_000)
+    #return FunctionAnalysisResult(function_name, "RC TEST", "", (perf_counter_ns() - start)/1000_000)
     
     # Construct Local Bound Mapping
     local_bound_mapping = construct_local_bound_mapping(dcp, norms)

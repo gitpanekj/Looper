@@ -193,7 +193,7 @@ def __reset_sum(dcp, local_bound_assignment, norm, result_cache) -> Expression:
         # VB(t) + c
         _variable_bound += c
         
-        _reset_sum += _transition_bound * _variable_bound
+        _reset_sum += _transition_bound * Expression.create_max([_variable_bound, constants.ZERO.copy()])
     
     
     return _reset_sum
@@ -234,6 +234,7 @@ def __variable_bound(dcp, local_bound_assignment, norm, result_cache) -> Express
         _variable_bound = variable_bound(dcp, local_bound_assignment, a, result_cache)
         if not _variable_bound: # cyclic recursion detection propagation, computation failed
             return None
+        _variable_bound = _variable_bound.copy()
         
         # VB(e_i) + c_i
         _variable_bound += c
@@ -246,5 +247,9 @@ def __variable_bound(dcp, local_bound_assignment, norm, result_cache) -> Express
         return None
 
     # Incr(e) + max(VB(e) + c)
-    _vb = vbs[0] if len(vbs) > 0 else Expression.create_constant(0)
-    return _increment_sum + _vb.copy()  # TODO: change to max of resets
+    if len(vbs) == 0:
+        return _increment_sum
+    if len(vbs) == 1:
+        return _increment_sum + vbs[0]
+    
+    return _increment_sum + Expression.create_max(vbs)
