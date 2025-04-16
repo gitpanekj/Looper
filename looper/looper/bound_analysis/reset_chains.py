@@ -1,7 +1,6 @@
 from graphs import ResetChainGraph
 from expression import Expression
 from looper.utils import constants
-from functools import partial
 
 type Atom = Expression
 type Transition = int
@@ -12,14 +11,14 @@ type ResetChain = tuple[Expression, Transition, Constant]
 def construct_reset_chain_graph(dcp, variables) -> ResetChainGraph:
     reset_graph = ResetChainGraph()
     
-    # Add node for each variable
-    # each variable must be reset in the program at least once (initial, reset)
-    for var in variables:
-        reset_graph.add_atom(Expression.create_variable(var))
+    # # Add node for each variable
+    # # each variable must be reset in the program at least once (initial, reset)
+    # for var in variables:
+    #     reset_graph.add_atom(Expression.create_variable(var))
 
-    # Add constant program parameters
-    for param_name, _ in dcp.get_parameters():
-        reset_graph.add_atom(Expression.create_variable(param_name))
+    # # Add constant program parameters
+    # for param_name, _ in dcp.get_parameters():
+    #     reset_graph.add_atom(Expression.create_variable(param_name))
 
 
     for edge in dcp.get_edges():
@@ -31,14 +30,17 @@ def construct_reset_chain_graph(dcp, variables) -> ResetChainGraph:
             # pure constants reset - x <= c
             if dc.y == constants.ZERO:
                 src = reset_graph.add_atom(dc.c.copy())
-                dst = reset_graph.find_atom_vertex(str(dc.x))
+                #dst = reset_graph.find_atom_vertex(str(dc.))
+                dst = reset_graph.add_atom(dc.x.copy())
                 reset_graph.add_edge(src, dst, (edge, constants.ZERO.copy()))
                 continue
               
             # variables or program parameters
-            src = reset_graph.find_atom_vertex(str(dc.y))
-            dst = reset_graph.find_atom_vertex(str(dc.x))
-            print(src, dc.y, dst, dc.x)
+            #src = reset_graph.find_atom_vertex(str(dc.y))
+            src = reset_graph.add_atom(dc.y.copy())
+            #dst = reset_graph.find_atom_vertex(str(dc.x))
+            dst = reset_graph.add_atom(dc.x.copy())
+            
             reset_graph.add_edge(src, dst, (edge, dc.c.copy()))
 
     return reset_graph
@@ -84,6 +86,7 @@ def get_all_reset_chains(dcp, reset_graph, variables) -> dict[str, list[ResetCha
 
 def get_optimal_reset_chains(dcp, reset_graph, variables):
     reset_chain_mapping = get_all_reset_chains(dcp, reset_graph, variables)
+
     
     for a_0, reset_chains in reset_chain_mapping.items():
         sound_optimal_chains = map(lambda c: obtain_optimal_chain(dcp, c), reset_chains)
@@ -123,10 +126,9 @@ def is_sound(dcp, reset_chain: ResetChain, chain_start: int) -> bool:
     
     # a_0 : [(a_n, t_n, c_n), (a_n-1, t_n-1, c_n-1), ..., (a_1, t_1, c_1)]
     (a_i, t_i, _) = reset_chain[chain_start+1]
-    (_, t_1, _) = reset_chain[0]
+    (_, t_1, _) = reset_chain[len(reset_chain)-1]
     _, t_1_dst = dcp.get_edge_nodes(t_1)
     t_i_src, _ = dcp.get_edge_nodes(t_i)
-    
     return atom_reset_on_all_paths(dcp, str(a_i), t_1_dst, t_i_src)
     
     

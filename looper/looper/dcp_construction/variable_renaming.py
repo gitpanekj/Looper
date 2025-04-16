@@ -69,6 +69,11 @@ def rename_variables(dcp, renaming_mapping: dict[tuple[Location, VariableName], 
         for dc in constraints.values():
             new_x_name = renaming_mapping.get((dst, str(dc.x)), None)
             new_y_name = renaming_mapping.get((src, str(dc.y)), None)
+            # TODO: correctly solve variable definition for location
+            # NOTE: patch for removal of x <= y + c on initial transition if y contains undefined variables
+            if new_y_name == None and not set(dc.y.get_variable_names()).issubset(set((name for name,_ in dcp.get_parameters()))):
+                continue
+                
             renamed_x = Expression.create_variable(new_x_name) if new_x_name else dc.x.copy()
             renamed_y = Expression.create_variable(new_y_name) if new_y_name else dc.y.copy()
             c = dc.c.copy()
