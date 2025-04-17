@@ -91,9 +91,9 @@ LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS(LTSLabelBuilder, TransitionExecutionCon
         }
     
         std::shared_ptr<Predicate> condition_predicate;
-        // if the condition contains invalidated variales prdoce stub conditinos
+        // if the condition contains invalidated variales produce stub conditinos
         // to let the analysis flow
-        std::string condition = br->getCondition()->getName().str();
+        std::string condition = br->getCondition()->getNameOrAsOperand();
         if (ctx.invalidated_variables.find(condition) != ctx.invalidated_variables.end() ||
             ctx.predicate_cache.find(condition) == ctx.predicate_cache.end()) // this should not be possible
         {
@@ -101,7 +101,7 @@ LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS(LTSLabelBuilder, TransitionExecutionCon
         }
         else
         {
-            condition_predicate = ctx.predicate_cache.find(br->getCondition()->getName().str())->second;
+            condition_predicate = ctx.predicate_cache.find(condition)->second;
         }
 
         std::string true_branch = br->getSuccessor(0)->getName().str();
@@ -148,6 +148,44 @@ LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS(LTSLabelBuilder, TransitionExecutionCon
         }
         catch (InvalidatedValue&e){ // Invalidate store acess path
             ctx.invalidated_variables.insert(store_access_path);
+        }
+    }
+
+    INSTRUCTION_HANDLER(PHI){
+        if (ctx.previous_basic_block == nullptr){
+            throw InvalidatedValue("Invalid operand");
+        }
+
+        auto *phi = llvm::dyn_cast<llvm::PHINode>(inst);
+        for (unsigned i = 0; i < phi->getNumIncomingValues(); ++i) {
+            llvm::Value *val = phi->getIncomingValue(i);
+            llvm::BasicBlock *bb = phi->getIncomingBlock(i);
+            std::string val_name = val->getNameOrAsOperand();
+            std::string store_access_path = inst->getNameOrAsOperand();
+            
+            if (bb == ctx.previous_basic_block)
+            {
+                if (auto *CI = llvm::dyn_cast<llvm::ConstantInt>(val)) {
+                    if (CI->getType()->isIntegerTy(1)) {
+                        if (CI->isOne()) {
+                            ctx.predicate_cache[store_access_path] = std::make_shared<Equal>(Expression::create_constant(0),Expression::create_constant(0));
+                        } else if (CI->isZero()){
+                            ctx.predicate_cache[store_access_path] = std::make_shared<NotEqual>(Expression::create_constant(0),Expression::create_constant(0));
+                        } else {
+                            throw InvalidatedValue("Invalid operand");
+                        }
+                    }
+                    break;
+                }
+
+                auto it = ctx.predicate_cache.find(val_name);
+                if (it == ctx.predicate_cache.end()){
+                    throw InvalidatedValue("Invalid operand");
+                }
+    
+                ctx.predicate_cache[store_access_path] = it->second;
+                break;
+            }
         }
     }
 LLVM_IR_INTERPRETER_INSTRUCTION_HANDLERS_END

@@ -5,9 +5,6 @@
 #include <set>
 
 #include "llvm/IR/Function.h" // Function
-#include "llvm/IR/IntrinsicInst.h"
-#include "llvm/IR/DebugLoc.h"
-#include "llvm/IR/DebugInfoMetadata.h"
 
 #include "lts_constructor/cfg_utils.hpp"        // getFunctionName, getFunctionReturnType, getFunctionParameters
 #include "graphs/labeled_transition_system.hpp" // LabeledTransitionSystem
@@ -22,14 +19,14 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
 {
     // TODO: refactor description of the STACK
     // Stack of "edges" to be processed during CFG traversal.
-    // Edge is a pair (LTS location, CFG basic block).
+    // Edge is a tuple (LTS location, previous CFG basic block, CFG basic block).
     // A CFG basic block is direct or indirect successor of the basic block
     // the LTS location was created for during the previous CFG traversal.
     // A CFG basic block is indirect successor only in case when all predecessor
     // up to the basic block represented by location has exactly one predecossor and
     // exactly one successor.
     // At the beginning the (l_s, cfg_entry_block) is inserted.
-    std::stack<std::pair<int, llvm::BasicBlock *>> edges_to_process_stack;
+    std::stack<std::tuple<int, llvm::BasicBlock *, llvm::BasicBlock *>> edges_to_process_stack;
     // visited basic blocks
     std::set<llvm::BasicBlock *> visited_basic_blocks;
     std::set<llvm::BasicBlock *> processed_basic_blocks;
@@ -66,13 +63,14 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
     // CFG Traversal
     int location_id;
     llvm::BasicBlock *basic_block;
+    llvm::BasicBlock *previous_basic_block;
 
 
-    edges_to_process_stack.push({lts->get_start_location(), &cfg->getEntryBlock()});
+    edges_to_process_stack.push({lts->get_start_location(), &cfg->getEntryBlock(), &cfg->getEntryBlock()});
     while (!edges_to_process_stack.empty())
     {
         // Top
-        std::tie(location_id, basic_block) = edges_to_process_stack.top();
+        std::tie(location_id, previous_basic_block, basic_block) = edges_to_process_stack.top();
 
         //std::cout << "Location: " << location_id << "  BasicBlock: " << basic_block->getName().str() << std::endl;
 
@@ -93,6 +91,7 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
         // Instruction processing
         //std::cout << "Processing instructions to unvisited block" << std::endl;
         forming_label.check_target_node_of_jump(basic_block->getName().str());
+        forming_label.previous_basic_block = previous_basic_block;
         for (const auto &inst : *basic_block){
             // Instruction interpretation over the context
             try {
@@ -158,6 +157,7 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
                 // Processing the state changing instruction which are execuded before jump instruction NOTE:  works for testing example, may need extension in the future
                 // check whether the node is not target of a conditional jump, if so, condition is added to label - NOTE: here covers edge (src, dst) where src=dst
                 forming_label.check_target_node_of_jump(successor->getName().str()); // check whether the node is not target of a conditional jump, if so, condition is added to label
+                forming_label.previous_basic_block = basic_block;
                 for (const auto &inst : *successor){
                     // Instruction interpretation over the context
                     try {
@@ -196,7 +196,7 @@ LTS constructLTSFromCFG(llvm::Function *cfg)
                 continue;
             }
 
-            edges_to_process_stack.push({location_id, successor});
+            edges_to_process_stack.push({location_id, basic_block, successor});
         }
     }
     return _lts;

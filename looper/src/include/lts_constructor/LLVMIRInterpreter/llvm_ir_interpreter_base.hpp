@@ -39,7 +39,8 @@
     X(Call)\
     X(Alloca)\
     X(Load)\
-    X(Store)
+    X(Store)\
+    X(PHI)\
 
 // Interpreter definition macros
 #define LLVM_IR_INTERPRETER_INSTRUCTION_LIST(InterpreterName, _InterpretationContext) \

@@ -13,6 +13,7 @@
 
 #include "llvm/IR/Value.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/Function.h"
 
 struct TransitionExecutionContext
 {
@@ -25,10 +26,12 @@ struct TransitionExecutionContext
 
     std::unordered_set<std::string> invalidated_variables;  //< Set of variables whose value cannot be determined due to unsupported instruction
 
+    llvm::BasicBlock* previous_basic_block = nullptr;
+
     void clear()
     {
-        expression_cache.clear();
-        predicate_cache.clear();
+        //expression_cache.clear();
+        //predicate_cache.clear();
         statement_batch.clear();
         // block_name_to_predicate.clear();
         pending_condition = LTSTransitionCondition();
