@@ -6,7 +6,7 @@ from expression import Expression
 
 
 @BoundAnalysisWatch(watch=True)
-def cost_bounds(dcp, local_bound_mapping) -> Expression | None:
+def cost_bounds(dcp, local_bound_mapping, reset_chains=None) -> Expression | None:
     result_cache = {
         'transition_bound': {},
         'increment_sum': {},
@@ -24,14 +24,12 @@ def cost_bounds(dcp, local_bound_mapping) -> Expression | None:
         analysis_logger.log(f"\tEdgeCost({back_edge})")
         
         # TB(t)
-        tb = transition_bound(dcp, local_bound_mapping, back_edge, result_cache)
-        if not tb: # Infinte transitio bound
-            total_bound = None
-            break
-        
+
+        tb = transition_bound(dcp, local_bound_mapping, back_edge, result_cache, reset_chains)
+
         analysis_logger.log(f"\tEdgeCost({back_edge}) = {tb}")
         total_bound += tb
 
-    analysis_logger.log(f"\t[{'OK' if total_bound else 'FAILED':^6}] Cost = {total_bound}")
+    analysis_logger.log(f"\tCost = {total_bound}")
     
     return total_bound

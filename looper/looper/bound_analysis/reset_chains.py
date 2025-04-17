@@ -1,26 +1,22 @@
 from graphs import ResetChainGraph
 from expression import Expression
 from looper.utils import constants
+from collections import namedtuple
+from pprint import pprint
+from functools import reduce
 
 type Atom = Expression
 type Transition = int
 type Constant = Expression
 type AtomName = str
-type ResetChain = tuple[Expression, Transition, Constant]
+type ResetChainNode = tuple[Expression, Transition, Constant]
 
-def construct_reset_chain_graph(dcp, variables) -> ResetChainGraph:
+ResetChain = namedtuple('ResetChain', ['chain', 'trn', 'atm1', 'atm2', 'in_k', 'c'])
+
+
+def construct_reset_chain_graph(dcp) -> ResetChainGraph:
     reset_graph = ResetChainGraph()
     
-    # # Add node for each variable
-    # # each variable must be reset in the program at least once (initial, reset)
-    # for var in variables:
-    #     reset_graph.add_atom(Expression.create_variable(var))
-
-    # # Add constant program parameters
-    # for param_name, _ in dcp.get_parameters():
-    #     reset_graph.add_atom(Expression.create_variable(param_name))
-
-
     for edge in dcp.get_edges():
         for dc in dcp.get_edge_data(edge).constraints.values():
             # non-reset
@@ -30,22 +26,19 @@ def construct_reset_chain_graph(dcp, variables) -> ResetChainGraph:
             # pure constants reset - x <= c
             if dc.y == constants.ZERO:
                 src = reset_graph.add_atom(dc.c.copy())
-                #dst = reset_graph.find_atom_vertex(str(dc.))
                 dst = reset_graph.add_atom(dc.x.copy())
                 reset_graph.add_edge(src, dst, (edge, constants.ZERO.copy()))
                 continue
               
             # variables or program parameters
-            #src = reset_graph.find_atom_vertex(str(dc.y))
             src = reset_graph.add_atom(dc.y.copy())
-            #dst = reset_graph.find_atom_vertex(str(dc.x))
             dst = reset_graph.add_atom(dc.x.copy())
             
             reset_graph.add_edge(src, dst, (edge, dc.c.copy()))
 
     return reset_graph
 
-def get_all_reset_chains(dcp, reset_graph, variables) -> dict[str, list[ResetChain]]:
+def get_all_reset_chains(reset_graph, variables) -> dict[str, list[ResetChain]]:
     reset_chains = {var: [] for var in variables}
     
     source_nodes = [node for node in reset_graph.get_nodes() if len(reset_graph.get_predecessors(node)) == 0]
@@ -63,7 +56,9 @@ def get_all_reset_chains(dcp, reset_graph, variables) -> dict[str, list[ResetCha
         if status == PROCESSED: # all the otugoing edges processed
             # Generate new reset chain
             a_0 = reset_graph.get_node_data(target)
-            reset_chains[str(a_0)].append(forming_reset_chain.copy())
+            chain = forming_reset_chain.copy()
+            chain.append((a_0, None, constants.ZERO.copy()))
+            reset_chains[str(a_0)].append(chain)
             
             # Pop from the reset chain
             forming_reset_chain.pop()
@@ -85,38 +80,74 @@ def get_all_reset_chains(dcp, reset_graph, variables) -> dict[str, list[ResetCha
 
 
 def get_optimal_reset_chains(dcp, reset_graph, variables):
-    reset_chain_mapping = get_all_reset_chains(dcp, reset_graph, variables)
-
+    reset_chain_mapping = get_all_reset_chains(reset_graph, variables)
     
     for a_0, reset_chains in reset_chain_mapping.items():
-        sound_optimal_chains = map(lambda c: obtain_optimal_chain(dcp, c), reset_chains)
-        reset_chain_mapping[a_0] = list(sound_optimal_chains)
-    
+        sound_optimal_chains = map(lambda c: obtain_optimal_chain(dcp, reset_graph, c), reset_chains)
+        
+        # TODO: better unique filtering of reset chains
+        # remove duplicates
+        unique_optimal_chains_hashes = {}
+        unique_optimal_chains = []
+        for c in sound_optimal_chains:
+            new_chain = [(str(a), t) for a,t,_ in c.chain]
+            h = reduce(lambda acc, x: acc + hash(x), new_chain, 0)
+            
+            unique_chain = unique_optimal_chains_hashes.get(h, None)
+            if unique_chain and new_chain == unique_chain:
+                continue
+            
+            unique_optimal_chains_hashes[h] = new_chain
+            unique_optimal_chains.append(c)
+            
+            
+        reset_chain_mapping[a_0] = unique_optimal_chains
     return reset_chain_mapping
 
             
-def obtain_optimal_chain(dcp, reset_chain: ResetChain) -> ResetChain:
+def obtain_optimal_chain(dcp, reset_graph, reset_chain: ResetChain) -> ResetChain:
     """ Obtain the longest possible sound reset chain in the reset_chain """
     
     # NOTE: reset chain a_n -> a_n-1 -> ... -> a_1 -> a_0 is presented as
-    # [(a_n, t_n, c_n), (a_n-1, t_n-1, c_n-1), ..., (a_1, t_1, c_1)]
+    # [(a_n, t_n, c_n), (a_n-1, t_n-1, c_n-1), ..., (a_1, t_1, c_1), (a_0, -1, 0)]
     
     # All reset chains of length 2 are sound
-    if len(reset_chain) == 1: # a_1 -> a_0
-        return reset_chain
+    if len(reset_chain) == 2: # a_1 -> a_0
+        _in_k, t, _c = reset_chain[0]
+        _atm1, _atm2 = {str(reset_chain[-1][0]): reset_chain[-1][0]}, {}
+        _trn = {t}
+        return ResetChain(reset_chain,
+                        _trn,
+                        _atm1,
+                        _atm2,
+                        _in_k,
+                        _c)
 
     # Find optimal (longest) sound reset chain
     # Iteratively prepend a_i to the chain and check whether it is still sound
     # a_n -> a_n-1 -> ... -> a_2 -> a_1 -> a_0
-    chain_start = len(reset_chain) - 2 # a_2
+    chain_start = len(reset_chain) - 3 # a_2
     while chain_start >= 0 and is_sound(dcp, reset_chain, chain_start):
         chain_start -= 1 # start is a_i+1, prepending atom to the chain
     
     # move back to the last start of sound reset chain 
     chain_start += 1
     
+    # Obtain helper function results
+    optimal_chain = reset_chain[chain_start:]
+    
+    
     # return a_{sound_start} -> ... -> a_0
-    return reset_chain[chain_start:]
+    _atm1, _atm2 = atm_1_and_2(reset_graph, optimal_chain)
+    _trn = trn(optimal_chain)
+    _in_k = in_k(optimal_chain)
+    _c = c(optimal_chain)
+    return ResetChain(optimal_chain,
+                      _trn,
+                      _atm1,
+                      _atm2,
+                      _in_k,
+                      _c)
 
 
 # (a_i, l_1, l_2)
@@ -126,7 +157,7 @@ def is_sound(dcp, reset_chain: ResetChain, chain_start: int) -> bool:
     
     # a_0 : [(a_n, t_n, c_n), (a_n-1, t_n-1, c_n-1), ..., (a_1, t_1, c_1)]
     (a_i, t_i, _) = reset_chain[chain_start+1]
-    (_, t_1, _) = reset_chain[len(reset_chain)-1]
+    (_, t_1, _) = reset_chain[-2]
     _, t_1_dst = dcp.get_edge_nodes(t_1)
     t_i_src, _ = dcp.get_edge_nodes(t_i)
     return atom_reset_on_all_paths(dcp, str(a_i), t_1_dst, t_i_src)
@@ -140,6 +171,10 @@ def atom_reset_on_all_paths(dcp, atom: str, src: int, dst: int) -> bool:
     # Remove all the edges where atom is reset, atom <= y +c , y != atom
     # If dst is reachable from src, then there exists a path where atom
     # is not reset
+    
+    # NOTE: check validity of this adjustment
+    if src == dst:
+        return True
     
     # Reset set
     R = []
@@ -181,3 +216,46 @@ def is_reachable_from(dcp, src: int, dst: int) -> bool:
                 dfs_stack.append(succesor)
         
     return False
+
+
+def number_of_paths_in_dag(graph, src, dst):
+    dfs_stack = [src]
+    n_paths = 0
+    
+    while len(dfs_stack) > 0:
+        vertex = dfs_stack.pop()
+        if vertex == dst:
+            n_paths += 1
+        else:
+            for successor in graph.get_successors(vertex):
+                dfs_stack.append(successor)
+    return n_paths
+
+def in_k(chain):
+    atom, _, _ = chain[0]
+    return atom
+
+def atm(chain):
+    atoms = {str(atom): atom for atom, _, _ in chain[1:]}
+    return atoms
+
+def atm_1_and_2(reset_graph, chain):
+    atoms = atm(chain)
+    atm1 = {}
+    atm2 = {}
+    
+    chain_end_vertex_id = reset_graph.find_atom_vertex(str(chain[-1][0]))
+    for atom_str, atom in atoms.items():
+        atom_vertex_id = reset_graph.find_atom_vertex(atom_str)
+        if number_of_paths_in_dag(reset_graph, atom_vertex_id, chain_end_vertex_id) > 1:
+            atm2[atom_str] = atom
+        else:
+            atm1[atom_str] = atom
+    
+    return atm1, atm2
+
+def trn(chain):
+    return set([t for _,t,_ in chain if t is not None])
+
+def c(chain):
+    return sum([c for _,_,c in chain], start = constants.ZERO.copy())

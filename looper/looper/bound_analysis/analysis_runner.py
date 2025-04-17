@@ -12,6 +12,7 @@ from looper.config import Configuration
 from looper.utils import analysis_logger
 
 from .cost_bounds import cost_bounds
+from .transition_bounds import CyclicRecursionDetected
 from .local_bounds import construct_local_bound_mapping
 from .reset_chains import construct_reset_chain_graph, get_optimal_reset_chains
 
@@ -67,13 +68,13 @@ def analyze_function(compiled_unit, function_name) -> FunctionAnalysisResult:
     if Configuration['graphs']:
         analysis_logger.save_in_directory('dcp.dot', dcp.convert_to_dot())
     
+    reset_chains = None
     if Configuration.config['analysis']['rc']:
         variable_names = set([str(norm) for norm in norms])
-        reset_graph = construct_reset_chain_graph(dcp, variable_names)
+        reset_graph = construct_reset_chain_graph(dcp)
         if Configuration['graphs']:
             analysis_logger.save_in_directory('rc.dot', reset_graph.convert_to_dot())
         reset_chains = get_optimal_reset_chains(dcp, reset_graph, variable_names)
-        pprint(reset_chains)
         
     
     #return FunctionAnalysisResult(function_name, "RC TEST", "", (perf_counter_ns() - start)/1000_000)
@@ -84,9 +85,12 @@ def analyze_function(compiled_unit, function_name) -> FunctionAnalysisResult:
         return FunctionAnalysisResult(function_name, "Top", "Failed to assign local bounds.")
     
     # Compute Total Bounds
-    bound = cost_bounds(dcp, local_bound_mapping)
+    try:
+        bound = cost_bounds(dcp, local_bound_mapping, reset_chains)
+    except CyclicRecursionDetected as e:
+        return FunctionAnalysisResult(function_name, "Top", str(e), (perf_counter_ns() - start)/1000_000)
     
 
     
-    return FunctionAnalysisResult(function_name, str(bound) if bound else "Top", "", (perf_counter_ns() - start)/1000_000)
+    return FunctionAnalysisResult(function_name, str(bound), "", (perf_counter_ns() - start)/1000_000)
     
