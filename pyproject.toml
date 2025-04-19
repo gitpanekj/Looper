@@ -29,15 +29,15 @@ dependencies = [
 include-package-data = true 
 
 [tool.setuptools.packages.find]
-where = ["looper", "looper/modules"]
+where = ["looper", "looper/cpp_modules"]
 
 [tool.setuptools.package-data]
-"modules.expression" = ["expression/*.so"]
-"modules.labeled_transition_system" = ["labeled_transition_system/*.so"]
-"modules.difference_constraint_program" = ["difference_constraint_program/*.so"]
-"modules.reset_chain_graph" = ["reset_chain_graph/*.so"]
-"modules.variable_flow_graph" = ["variable_flow_graph/*.so"]
-"modules.lts_constructor" = ["lts_constructor/*.so"]
+"cpp_modules.expression" = ["expression/*.so"]
+"cpp_modules.labeled_transition_system" = ["labeled_transition_system/*.so"]
+"cpp_modules.difference_constraint_program" = ["difference_constraint_program/*.so"]
+"cpp_modules.reset_chain_graph" = ["reset_chain_graph/*.so"]
+"cpp_modules.variable_flow_graph" = ["variable_flow_graph/*.so"]
+"cpp_modules.lts_constructor" = ["lts_constructor/*.so"]
 
 [project.scripts]
 looper = "looper:cli_run_analysis"

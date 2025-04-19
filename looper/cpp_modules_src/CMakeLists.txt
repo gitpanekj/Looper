@@ -1,0 +1,10 @@
+# pybind
+add_subdirectory(pybind11)
+# modules
+add_subdirectory(directed_labeled_graph)
+add_subdirectory(labeled_transition_system)
+add_subdirectory(difference_constraint_program)
+add_subdirectory(reset_chain_graph)
+add_subdirectory(variable_flow_graph)
+add_subdirectory(expression)
+add_subdirectory(lts_constructor)
