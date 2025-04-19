@@ -5,7 +5,7 @@ from pathlib import Path
 from dataclasses import dataclass
 from pprint import pprint
 
-from lts import LLVMIRProcessor
+from lts_constructor import LLVMIRProcessor
 
 from looper.dcp_construction import build_dcp
 from looper.config import Configuration

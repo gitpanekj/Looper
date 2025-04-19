@@ -2,7 +2,7 @@
 #define LTS_LABEL_BUILDER
 
 #include "llvm_ir_interpreter_base.hpp"
-#include "graphs/lts_labels.hpp"
+#include "labeled_transition_system/lts_labels.hpp"
 #include "LTS_execution_context.hpp"
 
 LLVM_IR_INTERPRETER_INSTRUCTION_LIST(LTSLabelBuilder, TransitionExecutionContext)

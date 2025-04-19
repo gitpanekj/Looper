@@ -9,7 +9,7 @@
 #include <unordered_map>
 #include "expression/expression.hpp"
 
-
+namespace difference_constraint_program {
 struct DifferenceConstraint {
     std::shared_ptr<Expression> x,y,c; //< x <= y + c where c is constant and x,y are expression over program variables
 
@@ -66,6 +66,8 @@ struct DCPTransitionLabel {
         return guards.find(guard->to_string()) != guards.end();
     }
 };
+
+}
 
 
 #endif

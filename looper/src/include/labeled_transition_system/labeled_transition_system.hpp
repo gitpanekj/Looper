@@ -1,13 +1,14 @@
 #ifndef LTS_H
 #define LTS_H
 
-#include "graphs/directed_labeled_graph.hpp"
-#include "graphs/lts_labels.hpp"
-#include "graphs/difference_constraint_program.hpp"
+#include "directed_labeled_graph/directed_labeled_graph.hpp"
+#include "difference_constraint_program/difference_constraint_program.hpp"
+#include "lts_labels.hpp"
 #include <vector>
 #include <unordered_set>
 
-namespace graphs {   
+
+namespace labeled_transition_system {
    /**
     * @brief Implementation of Labeled Transition System (LTS) abstracting program execution.
     * 
@@ -22,7 +23,7 @@ namespace graphs {
     * For keeping track of loop head vertex ids along with related back edge ids, two ordered sets are used.
     * 
     */
-   class LabeledTransitionSystem : public DirectedLabeledGraph<std::string, LTSTransitionLabel>
+   class LabeledTransitionSystem : public directed_labeled_graph::DirectedLabeledGraph<std::string, LTSTransitionLabel>
    {
     private:
         int start_location;

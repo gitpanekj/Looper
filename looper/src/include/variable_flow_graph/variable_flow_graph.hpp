@@ -1,17 +1,17 @@
 #ifndef VFG_H
 #define VFG_H
 
-#include "graphs/directed_labeled_graph.hpp"
+#include "directed_labeled_graph/directed_labeled_graph.hpp"
 #include <unordered_map>
 #include <utility>
 
-namespace graphs
-{
 
+namespace variable_flow_graph
+{
     using Location = int;
     using VarName = std::string;
     using VertexId = int;
-    class VariableFlowGraph : public DirectedLabeledGraph<std::pair<Location, VarName>, std::string>
+    class VariableFlowGraph : public directed_labeled_graph::DirectedLabeledGraph<std::pair<Location, VarName>, std::string>
     {
     private:
         struct pair_hash

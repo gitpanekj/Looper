@@ -22,7 +22,7 @@
 #include <optional>
 #include <unordered_set>
 
-namespace graphs
+namespace directed_labeled_graph
 {
    /**
     * @brief Class representing directed labeled graph.

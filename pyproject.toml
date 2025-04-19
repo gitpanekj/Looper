@@ -33,8 +33,11 @@ where = ["looper", "looper/modules"]
 
 [tool.setuptools.package-data]
 "modules.expression" = ["expression/*.so"]
-"modules.graphs" = ["graphs/*.so"]
-"modules.lts" = ["lts/*.so"]
+"modules.labeled_transition_system" = ["labeled_transition_system/*.so"]
+"modules.difference_constraint_program" = ["difference_constraint_program/*.so"]
+"modules.reset_chain_graph" = ["reset_chain_graph/*.so"]
+"modules.variable_flow_graph" = ["variable_flow_graph/*.so"]
+"modules.lts_constructor" = ["lts_constructor/*.so"]
 
 [project.scripts]
 looper = "looper:cli_run_analysis"

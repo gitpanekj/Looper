@@ -4,19 +4,14 @@ from z3 import Int, And, Solver, unsat
 from itertools import chain, accumulate
 from looper.profiling import ProfilingManager
 from looper.utils import constants
-from expression import Expression
-from graphs import (DifferenceConstraintProgram as DCP,
-                    DifferenceConstraint as DC,
-                    DCPTransitionLabel,
-                    LabeledTransitionSystem as LTS,
-                    LTSTransitionCondition,
-                    lts_to_dcp)
 from looper.utils import analysis_logger
 from looper.config import Configuration
 from .variable_renaming import flow_sensitive_transformation
+from expression import Expression
+from difference_constraint_program import DifferenceConstraintProgram as DCP, DifferenceConstraint as DC, DCPTransitionLabel, lts_to_dcp
+from labeled_transition_system import LabeledTransitionSystem as LTS, LTSTransitionCondition
 
 DCPConstructionWatch = ProfilingManager.watch('dcp_construction')
-
 
 
 # TODO: helpers - should be encapsulated in DCP, LTS wrappers for Python

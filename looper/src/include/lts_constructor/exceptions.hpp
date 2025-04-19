@@ -14,64 +14,64 @@
 class InvalidFunctionNameException : public std::exception
 {
 private:
-    char *message;
+    std::string message;
 
 public:
-    InvalidFunctionNameException(char *msg) : message(msg) {}
-    char *what()
+    InvalidFunctionNameException(const std::string& msg) : message(msg) {}
+    const char* what() const noexcept override
     {
-        return message;
+        return message.c_str();
     }
 };
 
 class InvalidFileException : public std::exception
 {
 private:
-    char *message;
+    std::string message;
 
 public:
-    InvalidFileException(char *msg) : message(msg) {}
-    char *what()
+    InvalidFileException(const std::string& msg) : message(msg) {}
+    const char* what() const noexcept override
     {
-        return message;
+        return message.c_str();
     }
 };
 
 class ModuleNotLoadedException : public std::exception
 {
 private:
-    char *message;
+    std::string message;
 
 public:
-    ModuleNotLoadedException(char *msg) : message(msg) {}
-    char *what()
+    ModuleNotLoadedException(const std::string& msg) : message(msg) {}
+    const char* what() const noexcept override
     {
-        return message;
+        return message.c_str();
     }
 };
 
 class UnknownInstruction : public std::exception
 {
 private:
-    char *message;
+    std::string message;
 
 public:
-    UnknownInstruction(char *msg) : message(msg) {}
-    char *what()
+    UnknownInstruction(const std::string& msg) : message(msg) {}
+    const char* what() const noexcept override
     {
-        return message;
+        return message.c_str();
     }
 };
 
 class InvalidatedValue : public std::exception
 {
 private:
-    char *message;
+    std::string message;
 
 public:
-InvalidatedValue(char *msg) : message(msg) {}
-    char *what()
+InvalidatedValue(const std::string& msg) : message(msg) {}
+    const char* what() const noexcept override
     {
-        return message;
+        return message.c_str();
     }
 };

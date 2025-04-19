@@ -1,11 +1,11 @@
-#include "graphs/reset_chain_graph.hpp"
-#include "graphs/directed_labeled_graph.hpp"
+#include "reset_chain_graph/reset_chain_graph.hpp"
+#include "directed_labeled_graph/directed_labeled_graph.hpp"
 #include "expression/expression.hpp"
 #include <utility>
 #include <memory>
 #include <sstream>
 
-namespace graphs
+namespace reset_chain_graph
 {
     int ResetChainGraph::find_atom_vertex(std::string atom)
     {

@@ -1,9 +1,9 @@
-#include "graphs/difference_constraint_program.hpp"
+#include "difference_constraint_program/difference_constraint_program.hpp"
 #include <iostream>
 #include <string>
 #include <sstream>
 
-namespace graphs
+namespace difference_constraint_program
 {
     bool DifferenceConstraintProgram::is_loop_head(int vertex_id) const
     {

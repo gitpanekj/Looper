@@ -3,14 +3,14 @@
 #include "lts_constructor/llvm_ir_processor.hpp"
 #include "lts_constructor/exceptions.hpp"
 #include "lts_constructor/lts_construction.hpp"
-#include "graphs/labeled_transition_system.hpp"
-#include "graphs/lts_labels.hpp"
+#include "labeled_transition_system/labeled_transition_system.hpp"
+#include "labeled_transition_system/lts_labels.hpp"
 
 #include "llvm/ADT/StringRef.h"     // StringRef
 #include "llvm/Support/SourceMgr.h" // SMDiagnostic
 #include "llvm/IRReader/IRReader.h" // parseIRFile
 
-using LTS = graphs::LabeledTransitionSystem;
+using LTS = labeled_transition_system::LabeledTransitionSystem;
 
 void LLVMIRProcessor::loadModule(const std::string &filename)
 {

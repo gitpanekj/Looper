@@ -8,12 +8,13 @@
 
 #include "expression/expression.hpp"
 #include "expression/predicate.hpp"
-#include "graphs/lts_labels.hpp"
+#include "labeled_transition_system/lts_labels.hpp"
 #include "lts_constructor/exceptions.hpp"
 
 #include "llvm/IR/Value.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
+using namespace labeled_transition_system;
 
 struct TransitionExecutionContext
 {

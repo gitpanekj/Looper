@@ -4,10 +4,10 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(lts, m)
+PYBIND11_MODULE(lts_constructor, m)
 {
     m.doc() = "lts_constructor";
-    py::module_::import("graphs");
+    py::module_::import("labeled_transition_system");
     py::module_::import("expression");
 
 

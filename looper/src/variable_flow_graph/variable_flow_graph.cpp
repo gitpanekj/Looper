@@ -1,15 +1,16 @@
-#include "graphs/variable_flow_graph.hpp"
-#include "graphs/directed_labeled_graph.hpp"
+#include "variable_flow_graph/variable_flow_graph.hpp"
+#include "directed_labeled_graph/directed_labeled_graph.hpp"
 #include <utility>
 #include <iostream>
 #include <string>
 #include <sstream>
 
-namespace graphs
+
+namespace variable_flow_graph
 {
     using VertexDataType = std::pair<Location, VarName>; 
     using EdgeDataType = std::string;
-    using DLG = DirectedLabeledGraph<VertexDataType, EdgeDataType>;
+    using DLG = directed_labeled_graph::DirectedLabeledGraph<VertexDataType, EdgeDataType>;
     
 
     int VariableFlowGraph::add_variable_vertex(int location, std::string variable)

@@ -3,8 +3,8 @@
 
 #include <memory>
 #include "llvm/IR/Function.h" // Function
-#include "graphs/labeled_transition_system.hpp" // LabeledTransitionSystem
+#include "labeled_transition_system/labeled_transition_system.hpp" // LabeledTransitionSystem
 
-graphs::LabeledTransitionSystem constructLTSFromCFG(llvm::Function *cfg);
+labeled_transition_system::LabeledTransitionSystem constructLTSFromCFG(llvm::Function *cfg);
 
 #endif

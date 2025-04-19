@@ -1,16 +1,19 @@
 #ifndef DCP_H
 #define DCP_H
 
-#include "graphs/directed_labeled_graph.hpp"
-#include "graphs/dcp_labels.hpp"
+#include "directed_labeled_graph/directed_labeled_graph.hpp"
+#include "labeled_transition_system/labeled_transition_system.hpp"
+#include "dcp_labels.hpp"
 #include <vector>
 #include <unordered_set>
 
-namespace graphs {  
-
+namespace labeled_transition_system {
    class LabeledTransitionSystem;
+}
 
-   class DifferenceConstraintProgram : public DirectedLabeledGraph<std::string, DCPTransitionLabel>
+
+namespace difference_constraint_program { 
+   class DifferenceConstraintProgram : public directed_labeled_graph::DirectedLabeledGraph<std::string, DCPTransitionLabel>
    {
     private:
         int start_location;
@@ -31,7 +34,7 @@ namespace graphs {
       bool is_back_edge(int edge_id) const;
 
       // LTS to DCP Mapper
-      friend void lts_to_dcp_mapper(LabeledTransitionSystem& lts, DifferenceConstraintProgram& dcp);
+      friend void lts_to_dcp_mapper(labeled_transition_system::LabeledTransitionSystem& lts, DifferenceConstraintProgram& dcp);
 
       std::string convert_to_dot() const override;
    };

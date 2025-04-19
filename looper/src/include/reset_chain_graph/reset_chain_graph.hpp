@@ -1,20 +1,20 @@
 #ifndef RCG_H
 #define RCG_H
 
-#include "graphs/directed_labeled_graph.hpp"
+#include "directed_labeled_graph/directed_labeled_graph.hpp"
 #include "expression/expression.hpp"
 #include <unordered_map>
 #include <utility>
 #include <memory>
 
-namespace graphs
+
+namespace reset_chain_graph
 {
     using Atom = std::shared_ptr<Expression>;
     using Const = std::shared_ptr<Expression>;
     using EdgeId = int;
     using Reset = std::pair<EdgeId, Const>;
-
-    class ResetChainGraph : public DirectedLabeledGraph<Atom, Reset>
+    class ResetChainGraph : public directed_labeled_graph::DirectedLabeledGraph<Atom, Reset>
     {
     private:
         std::unordered_map<std::string, int> vertex_label_to_vertex_id_mapping;

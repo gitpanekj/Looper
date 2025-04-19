@@ -1,11 +1,11 @@
-#include "graphs/labeled_transition_system.hpp"
-#include "graphs/lts_labels.hpp"
+#include "labeled_transition_system/labeled_transition_system.hpp"
+#include "labeled_transition_system/lts_labels.hpp"
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <list>
 
-namespace graphs
+namespace labeled_transition_system
 {
     /* LTS */
 

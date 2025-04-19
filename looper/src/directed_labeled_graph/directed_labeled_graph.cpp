@@ -9,9 +9,9 @@
  *
  */
 
-#include "graphs/directed_labeled_graph.hpp"
-#include "graphs/lts_labels.hpp"
-#include "graphs/dcp_labels.hpp"
+#include "directed_labeled_graph/directed_labeled_graph.hpp"
+#include "difference_constraint_program/difference_constraint_program.hpp"
+#include "labeled_transition_system/labeled_transition_system.hpp"
 #include "expression/expression.hpp"
 #include <iostream>
 #include <string>
@@ -26,7 +26,7 @@
 #include <utility>
 #include <memory>
 
-namespace graphs
+namespace directed_labeled_graph
 {
 
     /* DirectedLabeledGraph implementation */
@@ -463,7 +463,7 @@ namespace graphs
 
     /* End of DirectedLabeledGraph */
 }
-template class graphs::DirectedLabeledGraph<std::string, LTSTransitionLabel>;
-template class graphs::DirectedLabeledGraph<std::string, DCPTransitionLabel>;
-template class graphs::DirectedLabeledGraph<std::pair<int, std::string>, std::string>;
-template class graphs::DirectedLabeledGraph<std::shared_ptr<Expression>, std::pair<int, std::shared_ptr<Expression>>>;
+template class directed_labeled_graph::DirectedLabeledGraph<std::pair<int, std::string>, std::string>;
+template class directed_labeled_graph::DirectedLabeledGraph<std::string, difference_constraint_program::DCPTransitionLabel>;
+template class directed_labeled_graph::DirectedLabeledGraph<std::string, labeled_transition_system::LTSTransitionLabel>;
+template class directed_labeled_graph::DirectedLabeledGraph<std::shared_ptr<Expression>, std::pair<int, std::shared_ptr<Expression>>>;

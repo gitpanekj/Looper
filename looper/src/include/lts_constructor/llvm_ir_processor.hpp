@@ -9,10 +9,10 @@
 #include "llvm/IR/LLVMContext.h" // LLVMContext
 #include "llvm/IR/Function.h"    // Function
 
-#include "graphs/labeled_transition_system.hpp" // LabeledTransitionSystem
-#include "graphs/lts_labels.hpp"
+#include "labeled_transition_system/labeled_transition_system.hpp" // LabeledTransitionSystem
+#include "labeled_transition_system/lts_labels.hpp"
 
-using LTS = graphs::LabeledTransitionSystem;
+using LTS = labeled_transition_system::LabeledTransitionSystem;
 
 
 /**

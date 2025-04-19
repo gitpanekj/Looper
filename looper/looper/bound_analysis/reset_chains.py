@@ -1,4 +1,4 @@
-from graphs import ResetChainGraph
+from reset_chain_graph import ResetChainGraph
 from expression import Expression
 from looper.utils import constants
 from collections import namedtuple

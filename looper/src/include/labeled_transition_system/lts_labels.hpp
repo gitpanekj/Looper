@@ -9,6 +9,8 @@
 #include "expression/predicate.hpp"
 #include <unordered_map>
 
+
+namespace labeled_transition_system {
 /**
  * @brief Structure representing assignment on the LTS edge which changes a program state.
  *
@@ -113,5 +115,6 @@ struct LTSTransitionLabel
         return ss.str();
     };
 };
+}
 
 #endif

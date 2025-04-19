@@ -1,7 +1,8 @@
-from graphs import VariableFlowGraph as VFG, DifferenceConstraint as DC, DCPTransitionLabel
 from looper.config import Configuration
 from looper.utils import analysis_logger
 from expression import Expression
+from variable_flow_graph import VariableFlowGraph as VFG
+from difference_constraint_program import DifferenceConstraint as DC, DCPTransitionLabel
 
 
 type Location = int

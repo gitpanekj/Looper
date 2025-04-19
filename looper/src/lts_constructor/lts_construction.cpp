@@ -7,12 +7,12 @@
 #include "llvm/IR/Function.h" // Function
 
 #include "lts_constructor/cfg_utils.hpp"        // getFunctionName, getFunctionReturnType, getFunctionParameters
-#include "graphs/labeled_transition_system.hpp" // LabeledTransitionSystem
-#include "graphs/lts_labels.hpp"                // LTSTransitionLabel
+#include "labeled_transition_system/labeled_transition_system.hpp" // LabeledTransitionSystem
+#include "labeled_transition_system/lts_labels.hpp"                // LTSTransitionLabel
 #include "lts_constructor/LLVMIRInterpreter/lts_label_builder.hpp"
 #include "lts_constructor/LLVMIRInterpreter/LTS_execution_context.hpp"
 
-using LTS = graphs::LabeledTransitionSystem;
+using LTS = labeled_transition_system::LabeledTransitionSystem;
 
 
 LTS constructLTSFromCFG(llvm::Function *cfg)
