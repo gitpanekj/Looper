@@ -1,1 +1,0 @@
-from labeled_transition_system.labeled_transition_system import *
