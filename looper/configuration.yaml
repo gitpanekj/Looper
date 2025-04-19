@@ -3,5 +3,5 @@ analysis:
   rc: false
 results: '.'
 graphs: false
-logging: true
-profiling: true
+logging: false
+profiling: false
