@@ -4,5 +4,5 @@ project(looper)
 set(CMAKE_CXX_STANDARD 17 CACHE STRING "")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-add_subdirectory(src)
+add_subdirectory(cpp_modules_src)
 #add_subdirectory(tests)

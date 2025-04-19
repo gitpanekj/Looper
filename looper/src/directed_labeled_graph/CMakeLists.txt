@@ -1,2 +1,0 @@
-add_library(directed_labeled_graph directed_labeled_graph.cpp)
-target_include_directories(directed_labeled_graph PUBLIC ${CMAKE_SOURCE_DIR}/src/include)
