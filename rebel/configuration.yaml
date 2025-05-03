@@ -1,0 +1,7 @@
+analysis:
+  vfg: true
+  rc: true
+results: '.'
+graphs: false
+logging: false
+profiling: false

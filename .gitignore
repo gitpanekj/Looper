@@ -6,5 +6,6 @@ __pycache__
 *.dot
 *.bc
 *.ll
-looper.egg-info
-tests/results
+rebel/cpp_modules/*
+rebel.egg-info
+tests

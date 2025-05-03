@@ -3,10 +3,10 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "looper"
+name = "rebel"
 version="0.0.1"
 description = "Static analysis tool for determining tight upper bounds on execution cost"
-keywords = ["static analysis", "COST", "Looper", "execution cost"]
+keywords = ["static analysis", "COST", "REBEL", "execution cost"]
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
@@ -29,7 +29,7 @@ dependencies = [
 include-package-data = true 
 
 [tool.setuptools.packages.find]
-where = ["looper", "looper/cpp_modules"]
+where = ["rebel", "rebel/cpp_modules"]
 
 [tool.setuptools.package-data]
 "cpp_modules.expression" = ["expression/*.so"]
@@ -40,4 +40,4 @@ where = ["looper", "looper/cpp_modules"]
 "cpp_modules.lts_constructor" = ["lts_constructor/*.so"]
 
 [project.scripts]
-looper = "looper:cli_run_analysis"
+rebel = "rebel:cli_run_analysis"
